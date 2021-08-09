@@ -1,0 +1,88 @@
+YF-104G:
+//----thrust-----
+pmax = 44.44, //kN dry thrust
+pfor = 63.86, //kN AB thrust 
+//--------measurements fuselage-------------------
+lgt  = 16.69, // length in m
+hgt  = 4.11, //height in m
+fa   = 2.32, // frontal area in sqm
+ewe  = 6.390, // empty weight in kg
+gwe  = 9.980, // normal gross weight in kg
+mwe  = 13.054, // maximal takeoff weight in kg
+//---------wing----------------------
+s    = 6.68,  //wigspan (incl. fuselage) in m
+A    = 18.22, // wingarea in sqm
+AR   = 2.45, //aspect ratio wingspan²/wingarea
+roc  = 3.96, // wing root chord in m
+mac  = 2.91, // mean aerodynamic chord
+tic  = 1.49, // wing tip chord in m
+swb  = 18.1, //sweep-back-angle at 25% chord in degree
+e    = 0.82, //wing-efficiency factor aprox.
+Mcrit = 0.9, //critical Mach-number
+Awv   = 0.8, // a for CDwave
+Bwv   = 2.6, // b for CDwave 
+//---------h and v stab-------------------
+wshs = 3.63, // wingspan horizontal stab. in m
+wahs = 4.48, // wing area horizontal stab. in sqm
+wavs = 4.06, // wing area vertical stab. in sqm
+rdar = 0.51, // rudder area in sqm
+//-----------Flap and ailerons----------------- 
+lefa = 0.79, // leading edge flap area per side in sqm
+tefa = 1.07, // trailing edge flap area per side in sqm
+aia  = 0.88, // aileron area total in sqm
+aitn = 9.5, // aileron travel normal flight (gear up) in degree
+aitg = 20, // aileron travel gear down in degree
+//-----------fuel-----------------
+fint = 3.104, // fuel int. in kg (3.880 l * 0,8)
+
+//------fixed variables----
+
+pi   =   3.14159
+r    =   0       // density of surrounding air from DCS
+
+
+//------Formulas NASA-------
+
+Cdi = (Cl^2) / (pi * AR * e) //induced Drag (subsonic) 
+CDsub = Cd0 + CDflap + CDbrk + CDgear + (Cl^2)/(pi * AR * e) //coefficient of drag below M 0.9
+Cdsuper  = Cd0 + CDwave + CDbrk + (Cl^2)/(pi * AR * e) //coefficient of drag supersonic or above Mcrit (M 0.9)
+D   = Cd * A * 0.5 * r * V^2 //drag 
+Cl  = L / (A * 0.5 * r * V^2) //lift coefficient
+L   = Cl * A * 0.5 * r * V^2 // Lift
+CDwave = Awv * ((Mach / Mcrit) - 1)^Bwv
+
+--------------Formulas Book (to be changed to DCS-axis)--------------------------------------------------
+side force = 0.5 * p * Vc^2 * s * (Cydr * dr + Cyb * b) // side-force (book)
+
+body frame force:
+
+Fx (change to DCS) = L * sin α - D * cos α - mg * sin o + Ex + Gx
+Fy = side force + mg sin φ cos θ + Ey + Gy
+Fz = −L * cos α − D * sin α + mg * cos θ * cos φ + Ez + Gz
+
+body frame moments in stab. axis:
+
+Mstab = 1/2ρ *Vc^2 * sc (Cm0 + Cmα * αw + Cmδe*δe) + 1/4ρ * Vcsc^2(Cmq*Q + Cmαdot*αdot)
+Lstab = 1/2ρ * Vc^2c * sb (Clβ * Beta + Clδa * Deltaa + Clδr * Deltar) + 1/4ρ * Vcsb^2(Clp*pstab + Clr * rstab)
+Rstab = 1/2ρ * Vc^2 * sb (Cnβ * β + Cnδa * δa + Cnδr * δr) + 1/4ρVc * sb^2 (Cnp * pstab + Cnr * rstab)   
+
+-------moments of inertia----------------
+
+nominal configuration (50% int. fuel + 750 rounds)
+
+(Ix) = Ix = 3549 slug/ft² = 4811.79 kg/qm
+(Iy) = Iz = 58611 slug/ft² = 79465.84 kg/qm
+(Iz) = Iy = 59669 slug/ft² = 80900.30 kg/qm
+
+e = 2.76° (angle between pric. inertial axis and FRL)
+W = 16300 lb
+cg at 0.070 c (c = reference chord in ft)
+
+Power Approach conf. (20% int. Fuel, Full Flaps (45°), BLC and Gear down) 
+
+W = 14126 lb
+Ix = 3450 slug/ft²
+Iy = 55800 slug/ft²
+Iz = 56800 slug/ft²
+e = 2.86°
+cg at 0.164 c (c = reference chord in ft)

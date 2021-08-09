@@ -1,0 +1,1 @@
+return _('YF104G_AG')

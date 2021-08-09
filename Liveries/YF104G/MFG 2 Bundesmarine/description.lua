@@ -1,0 +1,26 @@
+livery = {
+	{"VSN_F104G-01", 0, "VSN_F104G-01_MFG2",true},
+	{"VSN_F104G-02", 0, "VSN_F104G-02_MFG2",true},
+	{"VSN_F104G-03", 0, "VSN_F104G-03_MFG2",true},
+	{"VSN_F104G-04", 0, "VSN_F104G-04",true},
+	{"VSN_F104G-05", 0, "VSN_F104G-05_MFG2",true},
+	{"VSN_F104G-06", 0, "VSN_F104G-06",true},
+	{"VSN_F104G-07", 0, "VSN_F104G-07_MFG2",true},
+	{"VSN_F104G_Pilot", 0, "VSN_F104G_Pilot_MFG2",true},
+	
+	
+	
+	{"VSN_F104G-01", ROUGHNESS_METALLIC, "VSN_F104G-01_RoughMet",true},
+	{"VSN_F104G-02", ROUGHNESS_METALLIC, "VSN_F104G-02_RoughMet",true},
+	{"VSN_F104G-03", ROUGHNESS_METALLIC, "VSN_F104G-03_RoughMet",true},
+	{"VSN_F104G-04", ROUGHNESS_METALLIC, "VSN_F104G-04_RoughMet",true},
+	{"VSN_F104G-05", ROUGHNESS_METALLIC, "VSN_F104G-05_RoughMet",true},
+	{"VSN_F104G-06", ROUGHNESS_METALLIC, "VSN_F104G-06_RoughMet",true},
+	{"VSN_F104G-07", ROUGHNESS_METALLIC, "VSN_F104G-07_RoughMet",true},
+	{"VSN_F104G_Pilot", ROUGHNESS_METALLIC, "VSN_F104G_Pilot_RoughMet",true},
+	
+	
+}
+
+name = "MFG 2 Bundesmarine"
+-- by Gerritboom
