@@ -186,7 +186,7 @@ void FlightModel::M_stab()
 	*/
 	
 	//----------------NEUE Version mit Ausschlagsbeschränkung auf max Ausschlag Backstick-------------------------------------------------------------------------------------------------
-	m_moment.z += m_k * CON_mac * (1.35 * (CmalphaNEW(m_state.m_mach) * m_state.m_aoa) + (0.80 * -CmdeNEW(m_state.m_mach)) * ((((m_input.getPitch() * CON_hstdUP) + m_pitchup) + m_input.getTrimmUp() - m_input.getTrimmDown() + m_airframe.getAutoPilotAltH()) * m_hStabDamage))
+	m_moment.z += m_k * CON_mac * (1.35 * (CmalphaNEW(m_state.m_mach) * m_state.m_aoa) + (-CmdeNEW(m_state.m_mach)) * ((((m_input.getPitch() * CON_hstdUP) + m_pitchup) + m_input.getTrimmUp() - m_input.getTrimmDown() + m_airframe.getAutoPilotAltH()) * m_hStabDamage))
 		+ 0.25 * m_state.m_airDensity * m_scalarVelocity * CON_A * CON_mac * CON_mac * ((1.75 * Cmq(m_state.m_mach)) * m_state.m_omega.z + (1.45 * Cmadot(m_state.m_mach)) * m_aoaDot);
 
 }
