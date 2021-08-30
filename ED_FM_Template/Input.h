@@ -76,6 +76,9 @@ enum Command
 	COMMAND_SIGHT_HORIZONTAL = 2142,//eigentlich 2142
 	COMMAND_SIGHT_VERTICAL = 2143,//eigentlich 2143
 
+	COMMAND_WHEELBRAKE_LEFT = 2112,
+	COMMAND_WHEELBRAKE_RIGHT = 2113,
+
 
 	//--------------------------------------
 
@@ -151,6 +154,9 @@ class Input
 			m_ailRIGHT = 0.0;
 			m_ailLEFT = 0.0;
 
+			m_brakeLeftWheel = 0.0;
+			m_brakeRightWheel = 0.0;
+
 		}
 
 		
@@ -217,6 +223,26 @@ class Input
 		inline const double getYaw()
 		{
 			return m_yaw;
+		}
+
+		inline const void brakeRight(double value)
+		{
+			m_brakeRightWheel = value;
+		}
+
+		inline const double getBrakeRight()
+		{
+			return m_brakeRightWheel;
+		}
+
+		inline const void brakeLeft(double value)
+		{
+			m_brakeLeftWheel = value;
+		}
+
+		inline const double getBrakeLeft()
+		{
+			return m_brakeLeftWheel;
 		}
 
 		inline const void trimmUP()
@@ -1038,6 +1064,9 @@ class Input
 	double m_rudLEFT = 0.0;
 	double m_ailRIGHT = 0.0;
 	double m_ailLEFT = 0.0;
+
+	double m_brakeLeftWheel = 0.0;
+	double m_brakeRightWheel = 0.0;
 
 };
 

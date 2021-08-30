@@ -105,6 +105,10 @@ void Airframe::zeroInit()
 	m_flapsPosition = 0.0;
 	m_speedBrakePosition = 0.0;
 
+	m_brakeLeft = 0.0;
+	m_brakeRight = 0.0;
+	m_brakeMoment = 0.0;
+
 	m_vMetEAS = 0.0;
 	m_vKnotsEAS = 0.0;
 	m_vKnotsEASInd = 0.0;
@@ -131,6 +135,7 @@ void Airframe::zeroInit()
 
 	resetDamage();
 	
+	
 	m_nozzlePosition = 0.0;
 
 	m_int_throttlePos = 0.0;
@@ -149,6 +154,7 @@ void Airframe::zeroInit()
 	m_chuteDeployed = false;
 	m_speedBrakeInd = 0.0;
 	m_mass = 1.0;
+	
 	m_damageStack.clear();
 	
 	m_timePassed = 0;
@@ -237,6 +243,7 @@ void Airframe::zeroInit()
 
 	m_moveSightH = 0.0;
 	m_moveSightV = 0.0;
+
 }
 
 void Airframe::coldInit()
@@ -690,11 +697,14 @@ void Airframe::airframeUpdate(double dt)
 	moveSightHorizontal();
 	moveSightVertical();
 
+	
+
 	//printf("Input_CrossH_Right %f \n", m_input.getCrossHRight());
 	//printf("Input_CrossH_Left %f \n", m_input.getCrossHLeft());
 	//printf("CrossH_Hori %f \n", m_crossHairHori);
 
-	//printf("Input_CrossH_Up %f \n", m_input.getCrossHUp());
+
+
 	//printf("Input_CrossH_Down %f \n", m_input.getCrossHDown());
 	
 
@@ -731,7 +741,7 @@ void Airframe::airframeUpdate(double dt)
 
 double Airframe::updateBrake()
 {
-	m_brakeMoment = 0.0;
+	//m_brakeMoment = 0.0;//überflüssig weil in ZeroInit auf 0.0 gesetzt
 	
 	/*if (m_input.m_release_brake == 1.0)
 	{
@@ -752,6 +762,33 @@ double Airframe::updateBrake()
 	}
 	
 	return m_brakeMoment;
+}
+
+double Airframe::updateBrakeLeft()
+{
+	if (updateBrake() != 0.0)
+	{
+		m_brakeLeft = updateBrake();
+	}
+	else
+	{
+		m_brakeLeft = m_input.getBrakeLeft();
+	}
+
+	return m_brakeLeft;
+}
+
+double Airframe::updateBrakeRight()
+{
+	if (updateBrake() != 0.0)
+	{
+		m_brakeRight = updateBrake();
+	}
+	else
+	{
+		m_brakeRight = m_input.getBrakeRight();
+	}
+	return m_brakeRight;
 }
 
 double Airframe::setNozzlePosition(double dt) //Nozzle-Position 0-10% Thrust open, 11-84% Thrust closed, 85-100% Thrust open
@@ -1588,5 +1625,8 @@ double Airframe::getAltIndTens()
 {
 	return m_altIndTens / 10.0;
 }
+
+//-------------------Gear and Flap overspeed Damage functions----------------
+
 
 

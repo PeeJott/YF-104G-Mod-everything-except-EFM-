@@ -70,14 +70,15 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <OutDir>..\..\..\bin\x86_64\vc100.debug</OutDir>
+    <OutDir>C:\Users\User\Saved Games\DCS\Mods\aircraft\YF104G_EFM\bin</OutDir>
+    <TargetName>YF104G</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <OutDir>..\..\bin</OutDir>
+    <OutDir>C:\Users\User\Saved Games\DCS\Mods\aircraft\YF104G_EFM\bin</OutDir>
     <TargetName>YF104G</TargetName>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">

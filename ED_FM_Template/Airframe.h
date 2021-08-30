@@ -135,6 +135,8 @@ public:
 
 	//NEU UpdateBrake-Funktion
 	double updateBrake();
+	double updateBrakeLeft();
+	double updateBrakeRight();
 	
 	//Brake-Chute-Funktionen
 	double brkChutePosition(); //verschoben nach CPP, daher inline gespart
@@ -183,7 +185,7 @@ public:
 	inline double stabDamageIndicator();
 
 	//---------Damage to Damage-Modell---------------
-	void overHeatToDamage();
+	//void overHeatToDamage();
 
 	
 
@@ -450,6 +452,8 @@ private:
 
 	//--------Brk-Chute Stuff-------------------------
 	double m_brakeMoment = 0.0;
+	double m_brakeLeft = 0.0;
+	double m_brakeRight = 0.0;
 	double m_chuteState = 0.0;
 	double m_nwsEngage = 0.0;
 	double m_chuteSlewY = 0.0;
@@ -553,6 +557,9 @@ private:
 	double m_stabDamInd = 0.0;
 
 
+
+
+
 	//---------------Actuators--------------------------------------
 
 	Actuator m_actuatorStab; //scheint nur zur optischen "Verschönerung" zu sein, aber egal
@@ -602,8 +609,8 @@ double Airframe::setRudder(double dt)
 
 double Airframe::setFlapsPosition(double dt)
 {
-	double input = m_input.getFlapsToggle();
-	return m_actuatorFlap.inputUpdate(input, dt);
+		double input = m_input.getFlapsToggle();
+		return m_actuatorFlap.inputUpdate(input, dt);
 }
 
 
@@ -614,20 +621,24 @@ double Airframe::setFlapsPosition(double dt)
 
 double Airframe::setGearLPosition(double dt)
 {
-	double input = m_input.getGearToggle(); 
-	return m_actuatorGearL.inputUpdate(input, dt);
+		double input = m_input.getGearToggle();
+		return m_actuatorGearL.inputUpdate(input, dt);	
 }
 
 double Airframe::setGearRPosition(double dt)
 {
-	double input = m_input.getGearToggle();
-	return m_actuatorGearR.inputUpdate(input, dt);
+	
+		double input = m_input.getGearToggle();
+		return m_actuatorGearR.inputUpdate(input, dt);
+
 }
 
 double Airframe::setGearNPosition(double dt)
 {	
-	double input = m_input.getGearToggle();
-	return m_actuatorGearN.inputUpdate(input, dt);
+	
+		double input = m_input.getGearToggle();
+		return m_actuatorGearN.inputUpdate(input, dt);
+	
 }
 
 double Airframe::setAirbrakePosition(double dt)
@@ -978,6 +989,7 @@ double Airframe::stabDamageIndicator()
 
 	return m_stabDamInd;
 }
+
 
 //------------AutoPilot-Stuff-----------------------------
 double Airframe::getAutoPilotAltH()

@@ -696,6 +696,12 @@ void ed_fm_set_command(int command,
 	case COMMAND_SIGHT_VERTICAL:
 		s_input->sightVertical(value);
 		break;
+	case COMMAND_WHEELBRAKE_LEFT:
+		s_input->brakeLeft(value);
+		break;
+	case COMMAND_WHEELBRAKE_RIGHT:
+		s_input->brakeRight(value);
+		break;
 	/*case COMMAND_NOSEWHEEL_STEERING_ENGAGE:
 		s_input->m_nwsteeringeng = value;
 		break;
@@ -920,6 +926,7 @@ void ed_fm_set_fc3_cockpit_draw_args_v2(float* data, size_t size)
 	data[618] = s_airframe->getAltIndThousands();//Altimeter 1000er
 	data[619] = s_airframe->getAltIndTenThousands();//Altimeter 10000er
 	data[620] = s_airframe->getAltIndHundreds();//Altimeter in 10er
+
 }
 
 
@@ -957,9 +964,9 @@ case ED_FM_SUSPENSION_2_UP_LOCK:
 	return s_airframe->getGearRPosition();
 
 case ED_FM_SUSPENSION_1_RELATIVE_BRAKE_MOMENT:
-	return s_airframe->updateBrake();
+	return s_airframe->updateBrakeLeft();//updateBrake();
 case ED_FM_SUSPENSION_2_RELATIVE_BRAKE_MOMENT:
-	return s_airframe->updateBrake();
+	return s_airframe->updateBrakeRight();//updateBrake();
 
 case ED_FM_ANTI_SKID_ENABLE:
 	return 1.0;
