@@ -46,6 +46,8 @@ public:
 	void sideForce();
 	void thrustForce();
 
+	void calcAeroDeflection();
+
 	//----------Cockpit-Shaker--------------------------
 	void calculateShake(double& dt);
 	inline double getCockpitShake();
@@ -96,6 +98,10 @@ private:
 	double CDBrkCht = 0.0;//NEU und Drag Brake-Chute
 	double CLblc = 0.0; //NEU BLC Lift-System für die angeströmten Landeklappen
 
+	//--------------Calculate aero and calculate deflections---------
+	double m_ailDeflection = 0.0;
+	double m_rudDeflection = 0.0;
+						
 	//---------------damage varaiables for parts---------------------
 	double m_rWingDamageCL = 0.0;
 	double m_rWingDamageCD = 0.0;

@@ -101,6 +101,9 @@ void FlightModel::zeroInit()
 	m_aoaPrevious = 0.0;
 	//m_aoaPrevious = 0.0;
 	m_aoaDot = 0.0;
+
+	m_ailDeflection = 0.0;
+	m_rudDeflection = 0.0;
 	
 	//m_state.m_mach = 0.0;
 	//m_state.m_beta = 0.0;
@@ -170,7 +173,7 @@ void FlightModel::L_stab()
 	*/
 
 	//-------------------------NEUE Versíon MIT Beschränkung des Max-Ausschalgs--------------------------------------------------------
-	m_moment.x += m_q * (Clb(m_state.m_mach) * m_state.m_beta + Clda(m_state.m_mach) * (((m_input.getRoll() * CON_aitgu) + m_input.getTrimmAilR() - m_input.getTrimmAilL()) * m_ailDamage) + (m_lWingDamageCD + m_rWingDamageCD) + (0.55 * Cldr(m_state.m_mach)) * (m_input.getYaw() * CON_RdDefGDR))
+	m_moment.x += m_q * (Clb(m_state.m_mach) * m_state.m_beta + Clda(m_state.m_mach) * (((m_input.getRoll() * m_ailDeflection) + m_input.getTrimmAilR() - m_input.getTrimmAilL()) * m_ailDamage) + (m_lWingDamageCD + m_rWingDamageCD) + (0.55 * Cldr(m_state.m_mach)) * (m_input.getYaw() * m_rudDeflection))
 		+ 0.25 * m_state.m_airDensity * m_scalarVelocity * CON_A * CON_b * CON_b * (2.0 * Clp(m_state.m_mach) * m_state.m_omega.x + (1.5 * -Clr(m_state.m_mach)) * m_state.m_omega.y);
 }
 
@@ -205,7 +208,7 @@ void FlightModel::N_stab()
 	*/
 
 	//----------------------------NEUE Version mit Beschränkung des max-Ruderausschlags-----------------------------------------------------
-	m_moment.y += m_q * ((1.5 - (0.95 * m_stallMult)) * -Cnb(m_state.m_mach) * m_state.m_beta + -Cndr(m_state.m_mach) * (-m_input.getYaw() * CON_RdDefGDR))
+	m_moment.y += m_q * ((1.5 - (0.95 * m_stallMult)) * -Cnb(m_state.m_mach) * m_state.m_beta + -Cndr(m_state.m_mach) * (-m_input.getYaw() * m_rudDeflection))
 		+ 0.25 * m_state.m_airDensity * m_scalarVelocity * CON_A * CON_b * CON_b * ((2.5 - m_stallMult) * Cnr(m_state.m_mach) * m_state.m_omega.y);
 }
 
@@ -232,9 +235,10 @@ void FlightModel::drag()
 }
 
 void FlightModel::sideForce()
-{
+{	
 	//set side force
 	//m_force.z
+	//vor m_input.getYaw() ein "-" eingefügt, da eigentlich "-"Yaw richtig-herum ist.
 	m_force.z += m_k * ((Cydr(m_state.m_mach) * m_input.getYaw()) + (Cyb(m_state.m_mach) * m_state.m_beta)); //neu eingefügt 28Mar21
 }
 
@@ -246,6 +250,28 @@ void FlightModel::thrustForce()
 	//m_engine.update(123); //neu eingefügt// und wieder zum testen auskommentiert 
 	m_force.x += m_engine.updateThrust() * m_airframe.getEngineDamageMult(); //m_engine.getThrust(); //m_engine.m_thrust geht nicht, da m_thrust "private" in engine.h, daher durch Funktion aufrufen
 	//printf("vector %f \n", m_engine.updateThrust()); //neu eingebaut für Ausgabe
+}
+
+void FlightModel::calcAeroDeflection()
+{
+	if (m_airframe.getGearNPosition() > 0.1)
+	{
+		m_ailDeflection = 2 * CON_aitgu;
+	}
+	if (m_airframe.getGearNPosition() == 0.0)
+	{
+		m_ailDeflection = 2 * CON_aitnu;
+	}
+
+	if (m_airframe.getGearNPosition() > 0.1)
+	{
+		m_rudDeflection = 2 * CON_RdDefGDR;
+	}
+	if (m_airframe.getGearNPosition() == 0.0)
+	{
+		m_rudDeflection = 2 * CON_RdDefGUR;
+	}
+
 }
 
 void FlightModel::update(double dt)
@@ -288,6 +314,7 @@ void FlightModel::update(double dt)
 	sideForce();
 	thrustForce();
 	calculateShake(dt);
+	calcAeroDeflection();
 	//printf("vector %f \n", m_force.x); //--Der Test für die gesamte (Thrust abzgl. Drag) resultierende m_force.x
 
 	//----------------function for Pitchup-Factor, Pitchup-force and pitchup-speed--------------------
