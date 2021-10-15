@@ -59,6 +59,9 @@ public:
 	inline double setAileron(double dt);
 	inline double setRudder(double dt);
 	inline double setStabilizer(double dt);
+
+	//Aerodynamic Surfaces multi due to reduction (Gear-up)
+	void aeroSurfaceMulti(double dt);
 	
 	//Flaps
 	inline double setFlapsPosition(double dt);
@@ -90,6 +93,8 @@ public:
 	inline double getGearLLamp(); //Gear-Lamp-Left
 	inline double getGearRLamp(); //Gear-Lamp-right
 	inline double getGearFLamp(); //Gear-Lamp-front
+
+	inline double getGearLeverLamp();
 
 	inline double getSpeedBrakePosition() const;
 	inline double getSpeedBrakeInd();
@@ -167,6 +172,10 @@ public:
 	double getAltIndHundreds();
 	double getAltIndTens();
 
+	inline double getAltInFeet();
+
+	inline double getEASinKnots();
+
 	//-----------Crosshair Test Functions-------------
 	void crossHairHori();
 	void crossHairVerti();
@@ -183,9 +192,23 @@ public:
 	//-------Damage Indicators Aileron and Stabilizer-------------
 	inline double ailDamageIndicator();
 	inline double stabDamageIndicator();
+	inline double overSpeedGearDamageInd();
+	inline double overSpeedFlapDamageInd();
 
-	//---------Damage to Damage-Modell---------------
-	//void overHeatToDamage();
+	//----------Weapons-Pylon_Indicator_Lights--------------------
+	void pylonIndLights();
+	inline double gunIndSwitch();
+
+	inline double getPylonIndLightG();
+	inline double getPylonIndLightA();
+
+
+
+	//---------Overspeed to Damage-Modell---------------
+	double osGearDamage();
+	double osFlapDamage();
+
+	void resetOSdamage();
 
 	
 
@@ -428,6 +451,11 @@ private:
 	double m_gearRLamp = 0.0;
 	double m_gearFLamp = 0.0;
 
+	double m_pylonIndLightG = 0.0;
+	double m_pylonIndLightA = 0.0;
+
+	double m_gearOversped = 0.0;
+
 	//modification variable for Ground-Start
 	double m_gearStart = 0.0;
 	double m_gearStartDown = 0.0;
@@ -441,6 +469,13 @@ private:
 	double m_aileronRight = 0.0;
 	double m_stabilizer = 0.0;
 	double m_rudder = 0.0;
+
+	double m_ailDef = 0.0;
+	double m_rudDef = 0.0;
+
+	double m_flapOversped = 0.0;
+	double m_flapOSind = 0.0;
+	double m_gearOSind = 0.0;
 
 	double m_noseWheelAngle = 0.0;
 
@@ -494,6 +529,10 @@ private:
 	double m_flapsLevPos = 0.0;
 	double m_flapsIndTEPos = 0.0;
 	double m_flapsIndLEPos = 0.0;
+
+	//------------Pylon Indicator Lights and switches--------------
+	double m_pylonIndLight = 0.0;
+	double m_gunSwitch = 0.0;
 
 	//-----------FuelFlow Indicator---------------------------------
 	double m_fuelHundred = 0.0;
@@ -589,7 +628,7 @@ private:
 
 double Airframe::setAileron(double dt)
 {
-	double input = m_input.getRoll(); // +m_input.m_rollTrim(); // m_rollTrim kommt noch
+	double input = m_input.getRoll() * m_ailDef; // +m_input.m_rollTrim(); // m_rollTrim kommt noch
 	return m_actuatorAil.inputUpdate(input, dt);
 }
 
@@ -603,7 +642,7 @@ double Airframe::setStabilizer(double dt)
 
 double Airframe::setRudder(double dt)
 {
-	double input = m_input.getYaw(); // +m_controls.yawTrim(); Yaw-Trim kommt noch
+	double input = m_input.getYaw() * m_rudDef; // +m_controls.yawTrim(); Yaw-Trim kommt noch
 	return m_actuatorRud.inputUpdate(input, dt);
 }
 
@@ -761,6 +800,11 @@ double Airframe::getGearFLamp()
 	return m_gearFLamp;
 }
 
+double Airframe::getGearLeverLamp()
+{
+	return m_gearRPosition;
+}
+
 
 double Airframe::getSpeedBrakePosition() const
 {
@@ -806,6 +850,34 @@ double Airframe::getHookInd()
 		m_hookInd = 0.0;
 	}
 	return m_hookInd;
+}
+
+double Airframe::overSpeedFlapDamageInd()
+{
+	if (osFlapDamage() > 0.0)
+	{
+		m_flapOSind = 1.0;
+	}
+	else if (osFlapDamage() == 0.0)
+	{
+		m_flapOSind = 0.0;
+	}
+
+	return m_flapOSind;
+}
+
+double Airframe::overSpeedGearDamageInd()
+{
+	if (osGearDamage() > 0.0)
+	{
+		m_gearOSind = 1.0;
+	}
+	else if(osGearDamage() == 0.0)
+	{
+		m_gearOSind = 0.0;
+	}
+	return m_gearOSind;
+
 }
 
 double Airframe::getAileron() const
@@ -990,6 +1062,43 @@ double Airframe::stabDamageIndicator()
 	return m_stabDamInd;
 }
 
+
+double Airframe::gunIndSwitch()
+{
+	
+	if (((m_input.getMasterGUN() == 1.0) || (m_input.getMasterAtoA1() == 1.0) || (m_input.getMasterAtoA2() == 1.0) || (m_input.getMasterAtoA3() == 1.0) || (m_input.getMasterAtoA4() == 1.0) || (m_input.getMasterAtoG() == 1.0)) && (m_input.getMasterNAVI() == 0.0))
+	{
+		m_gunSwitch = 1.0;
+	}
+	else
+	{
+		m_gunSwitch = 0.0;
+	}
+
+	return m_gunSwitch;
+}
+
+double Airframe::getPylonIndLightG()
+{
+	return m_pylonIndLightG;
+}
+
+double Airframe::getPylonIndLightA()
+{
+	return m_pylonIndLightA;
+}
+
+
+//--------------value cast functions----------------------
+double Airframe::getAltInFeet()
+{
+	return m_altInM * 3.28084;
+}
+
+double Airframe::getEASinKnots()
+{
+	return m_vKnotsEAS;
+}
 
 //------------AutoPilot-Stuff-----------------------------
 double Airframe::getAutoPilotAltH()

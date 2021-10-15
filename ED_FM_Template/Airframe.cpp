@@ -99,7 +99,19 @@ void Airframe::zeroInit()
 	m_gearLLamp = 0.0;
 	m_gearRLamp = 0.0;
 
+	m_pylonIndLight = 0.0;
+	m_gunSwitch = 0.0;
+
+	m_pylonIndLightG = 0.0;
+	m_pylonIndLightA = 0.0;
+
 	m_gearStart = 0.0;
+
+	m_gearOversped = 0.0;
+	m_flapOversped = 0.0;
+
+	m_flapOSind = 0.0;
+	m_gearOSind = 0.0;
 
 	//------aerodynamic surfaces-------
 	m_flapsPosition = 0.0;
@@ -127,6 +139,9 @@ void Airframe::zeroInit()
 	m_aileronRight = 0.0;
 	m_stabilizer = 0.0;
 	m_rudder = 0.0;
+
+	m_ailDef = 0.0;
+	m_rudDef = 0.0;
 	
 	m_hookPosition = 0.0;
 	m_hookInd = 0.0;
@@ -244,6 +259,11 @@ void Airframe::zeroInit()
 	m_moveSightH = 0.0;
 	m_moveSightV = 0.0;
 
+
+	m_actuatorFlap.revOverSpeedMalFunction();
+	m_actuatorGearL.revOverSpeedMalFunction();
+	m_actuatorGearN.revOverSpeedMalFunction();
+	m_actuatorGearR.revOverSpeedMalFunction();
 }
 
 void Airframe::coldInit()
@@ -601,6 +621,8 @@ void Airframe::airframeUpdate(double dt)
 	
 	//m_engine.setIntegrity(DMG_ELEM(Damage::ENGINE)); NOCH einfügen in der engine-class
 	
+	aeroSurfaceMulti(dt);//NEU
+	
 	m_stabilizer = setStabilizer(dt);
 	m_aileronLeft = setAileron(dt);
 	m_aileronRight = -m_aileronLeft;
@@ -630,6 +652,9 @@ void Airframe::airframeUpdate(double dt)
 	//printf("Flp-Up-Value %f \n", m_input.m_flapsup);
 	//printf("YAW_Value %f \n", m_input.m_flapstgl);
 	//printf("Flp-Tgl-Value %f \n", m_input.m_flapstgl);
+	printf("PylonIndicatorValueG %f \n", m_pylonIndLightG);
+	printf("PylonIndicatorValueA %f \n", m_pylonIndLightA);
+	printf("GunSwitchValue %f \n", m_gunSwitch);
 	
 	//---------Engine flame-out function------------------
 
@@ -681,6 +706,12 @@ void Airframe::airframeUpdate(double dt)
 	//airSpeedInKnotsCASInd();
 	airSpeedInMachInd();
 	altitudeInd();
+
+	osGearDamage();
+	osFlapDamage();
+
+	pylonIndLights();
+
 	
 	//printf("AS_Knots_EAS_Indicator %f \n", airSpeedInKnotsEASInd());
 	//printf("AS_Knots_CAS_Indicator %f \n", airSpeedInKnotsCASInd());
@@ -696,6 +727,8 @@ void Airframe::airframeUpdate(double dt)
 
 	moveSightHorizontal();
 	moveSightVertical();
+
+
 
 	
 
@@ -736,7 +769,32 @@ void Airframe::airframeUpdate(double dt)
 	//printf("Horizontal Sicht FLOAT %f \n", m_input.getSightHorizontal());
 	//printf("Vertikale Sicht FLOAT %f \n", m_input.getSightVertical());
 
+	//printf("Flap-Overspeed %f \n", m_flapOSind);
+	//printf("Gear-Overspeed %f \n", m_gearOSind);
 
+
+}
+
+//-------------Neu eingefügt für multiplikator AERO-Surfaces--------------
+void Airframe::aeroSurfaceMulti(double dt)
+{
+	if (getGearNPosition() > 0.1)
+	{
+		m_ailDef = 1.0;
+	}
+	if (getGearNPosition() == 0.0)
+	{
+		m_ailDef = 0.5;
+	}
+
+	if (getGearNPosition() > 0.1)
+	{
+		m_rudDef = 1.0;
+	}
+	if (getGearNPosition() == 0.0)
+	{
+		m_rudDef = 0.5;
+	}
 }
 
 double Airframe::updateBrake()
@@ -1306,7 +1364,7 @@ double Airframe::BLCsystem()
 
 	if ((getFlapsPosition() == 1.0) && (m_engine.getRPMNorm() >= 0.85))
 	{
-		m_blcLift = (0.50 * m_engine.getRPMNorm()) * CON_FlpL2;
+		m_blcLift = (0.31 * m_engine.getRPMNorm());// * CON_FlpL2; //von 0.50 * zu 0.31*
 	}
 
 	else
@@ -1595,7 +1653,7 @@ void Airframe::altitudeInd()
 		m_altInM = 0;
 	}
 
-	m_altInFt = (m_altInM * 3.28084) * 1000.0; //hier * 100 um die INT um 3 Stellen zu vergrößern, damit die Gleitkomma-Zahl nachher schöner ist
+	m_altInFt = (m_altInM * 3.28084) * 1000.0; //hier * 1000 um die INT um 3 Stellen zu vergrößern, damit die Gleitkomma-Zahl nachher schöner ist
 
 	m_altIndTenThousands = m_altInFt / 10000000; //gibt immer glatte 10k aus also 10000, 20000, 30000 usw.
 	m_altIndThousands = (m_altInFt % 10000000) / 1000000 ;//gibt immer 1 - 9999 aus
@@ -1627,6 +1685,81 @@ double Airframe::getAltIndTens()
 }
 
 //-------------------Gear and Flap overspeed Damage functions----------------
+double Airframe::osGearDamage()
+{
+	if ((m_state.m_mach > 0.53) && (getGearNPosition() > 0.2))
+	{
+		m_actuatorGearN.setOverSpeedMalFunction();
+		m_actuatorGearL.setOverSpeedMalFunction();
+		m_actuatorGearR.setOverSpeedMalFunction();
 
+		m_gearOversped = 1.0;
+	}
+	return m_gearOversped;
+}
+
+double Airframe::osFlapDamage()
+{
+	if ((m_state.m_mach > 0.53) && (getFlapsPosition() > 0.75))
+	{
+		m_actuatorFlap.setOverSpeedMalFunction();
+		m_flapOversped = 1.0;
+	}
+	if ((m_state.m_mach > 0.95) && (getFlapsPosition() > 0.25))
+	{
+		m_actuatorFlap.setOverSpeedMalFunction();
+		m_flapOversped = 1.0;
+	}
+	return m_flapOversped;
+}
+
+//-------------------Repair-Needs and Repair-Function-----------------------
+
+
+void Airframe::resetOSdamage()
+{
+	m_flapOversped = 0.0;
+	m_gearOversped = 0.0;
+	m_actuatorFlap.revOverSpeedMalFunction();
+	m_actuatorGearL.revOverSpeedMalFunction();
+	m_actuatorGearN.revOverSpeedMalFunction();
+	m_actuatorGearR.revOverSpeedMalFunction();
+
+}
+
+//--------------Pylon-Lights + GunSwitch Function-----------------------------------
+void Airframe::pylonIndLights()
+{
+	if (m_input.getElectricSystem() == 1.0)
+	{
+		if ((m_input.getMasterAtoA1() == 1.0) || (m_input.getMasterAtoA2() == 1.0) || (m_input.getMasterAtoA3() == 1.0) || (m_input.getMasterAtoA4() == 1.0))
+		{
+			m_pylonIndLightG = 1.0;
+			m_pylonIndLightA = 1.0;
+
+		}
+		else if (m_input.getMasterAtoG() == 1.0)
+		{
+			m_pylonIndLightG = 1.0;
+			m_pylonIndLightA = 0.0;
+		}
+		else if ((m_input.getMasterGUN() == 1.0) || (m_input.getMasterNAVI() == 1.0))
+		{
+			m_pylonIndLightG = 0.0;
+			m_pylonIndLightA = 0.0;
+		}
+		else
+		{
+			m_pylonIndLightG = 0.0;
+			m_pylonIndLightA = 0.0;
+		}
+	}
+	else
+	{
+		m_pylonIndLightG = 0.0;
+		m_pylonIndLightA = 0.0;
+	}
+
+}
 
 

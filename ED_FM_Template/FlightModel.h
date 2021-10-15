@@ -47,6 +47,13 @@ public:
 	void thrustForce();
 
 	void calcAeroDeflection();
+	void calcLiftFlaps();
+
+	void addedDrag();
+	void brokenFlapDrag();
+
+	void pitchStabAugSystem();
+	inline double getStabAugSystem();
 
 	//----------Cockpit-Shaker--------------------------
 	void calculateShake(double& dt);
@@ -72,10 +79,16 @@ private:
 	double m_aoaPrevious = 0.0;
 	//--------------Thrust related Values-----------------------------
 	//double m_thrust = 0.0; //neu 21FEb21 rauskommentiert 28.02.2021
+	double m_thinAirMulti = 0.0;
 	//--------------Misc---------------------------------------------
 	//--------------PitchUp and Stall--------------------------------
 	double m_pitchup = 0.0;
 	double m_stallMult = 0.0;
+
+	//---------Pitch Stability-augmentation--------------------------
+	double m_CmqStAg = 0.0;
+	double m_CmaDOTStAg = 0.0;
+	double m_StabAugSys = 0.0;
 
 	//--------------Formula-Parts STAB--------------------------------
 	//s : area
@@ -86,7 +99,7 @@ private:
 	double m_q = 0.0; //0.5*p*V^2 * s * b
 	double m_p = 0.0; //0.25*p*V * s * b^2
 
-	//-----------------Formula-Parts DRAG----------------------------
+	//-----------------Formula-Parts DRAG und LIFT----------------------------
 	double CDwave = 0.0; // a * (M/Mcrit)^b // neu 18.02.2021
 	double M_mcrit = 0.0; // Mach/Mcrit // neu 18.02.2021
 	double M_mcrit_b = 0.0; //(Mach/Mcrit)^CON_wdb // neu 18.02.2021
@@ -97,6 +110,10 @@ private:
 	double CDBrk = 0.0;// NEU 05April21 Brk-Out-Drag
 	double CDBrkCht = 0.0;//NEU und Drag Brake-Chute
 	double CLblc = 0.0; //NEU BLC Lift-System für die angeströmten Landeklappen
+	double CD_OverMach = 0.0;
+	double m_cdminADD = 0.0;
+	double CD_brFlap = 0.0;
+	bool m_flapBroken = false;
 
 	//--------------Calculate aero and calculate deflections---------
 	double m_ailDeflection = 0.0;
@@ -131,18 +148,27 @@ private:
 	Table Cmde;
 	Table CmdeNEW;
 	Table Cmq;
-	Table Cmadot; //genau so für jede DATA_Table
+	Table CmadotNEW; //genau so für jede DATA_Table
 	Table CmM;
+	//------------Pitch stability augmentation system--------------
+	Table CmqStAg;
+	Table CmaDOTStAg;
 	//-----------------DRAG------------------------
 	Table CDmin;
 	Table CDmach;
 	Table CDa;
 	Table CDeng;
+	Table CDOM;
+	Table CDminAD;
+	Table CDOK;
 	//-------------LIFT----------------------------
 	Table CLmax;
 	Table CLmach;
 	Table CLa;
 	Table CLds;
+	//Table CLa_FL1;
+	Table CLa_FL2;
+	Table CL_FlStat;
 	//-------------Roll---------------------------
 	Table Clb;
 	Table Clp;
@@ -150,7 +176,7 @@ private:
 	Table Clr;
 	Table Cldr;
 	//--------------YAW---------------------------
-	Table Cnb;
+	Table CnbNEW;
 	Table Cndr;
 	Table Cnr;
 	Table Cyb;
@@ -158,11 +184,13 @@ private:
 	//-------------Thrust------------------------
 	//Table PMax;
 	//Table PFor;
+	Table ThinAM;
 	//------------Misc---------------------------
 	//------------PitchUp and Stall-------------
 	Table PitAoA;
 	Table PitMult;
 	Table StAoA;
+	Table StAoAMulti;
 };
 
 const Vec3& FlightModel::getForce() const
@@ -178,6 +206,11 @@ const Vec3& FlightModel::getMoment() const
 double FlightModel::getCockpitShake()
 {
 	return m_cockpitShake;
+}
+
+double FlightModel::getStabAugSystem()
+{
+	return m_StabAugSys;
 }
 
 /*void FlightModel::setCockpitShakeModifier(double mod)

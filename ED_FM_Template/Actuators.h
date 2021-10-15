@@ -29,10 +29,14 @@ public:
 	void physicsUpdate(double dt);
 	double getPosition();
 	void setActuatorSpeed(double factor);
+	void setOverSpeedMalFunction();
+	void revOverSpeedMalFunction();
+
 
 private: // = 0.0; bei allen actuators eingefügt, vorher fehlte das!!!
 	double m_actuatorFactor = 0.0;
 	double m_actuatorSpeed = 0.0;
 	double m_actuatorPos = 0.0;
 	double m_actuatorTargetPos = 0.0;
+	bool m_overSpeedMalFunction = false;
 };

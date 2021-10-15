@@ -279,10 +279,14 @@ double Engine::updateThrust() //Wenn Veränderungen dann hier verändern NICHT obe
 	//printf("Throttle %f \n", corrThrottle);
 	//printf("Thrust %f \n", m_thrust); //eingefügt zum testen, ob M_thrust ausgegeben wird...
 	//printf("CurrentAirDensity %f \n", m_state.m_airDensity);
+
+	//-----------Thrust-function---------------------------------------------------------------------------
+	//bei PMax den airdensity-correction-multiplyer eingefügt. Dieser bedarf einer Überarbeitung zusammen mit dem Drag und Thrust-profil...
+	//
 	
 	if ((updateSpool() <= 0.85) && (m_ignitors == true) && (m_hasFuel == true) && (getRPMNorm() >= 0.70))
 	{
-		m_thrust = (updateSpool() * PMax(m_state.m_mach)) * (m_state.m_airDensity / CON_sDay_den);
+		m_thrust = (updateSpool() * PMax(m_state.m_mach)) * ((m_state.m_airDensity + ( 0.66 * m_corrAirDensity)) / CON_sDay_den);
 	}
 	else if ((updateSpool() > 0.85) && (m_ignitors == true) && (m_hasFuel == true) && (getRPMNorm() >= 0.70))
 	{
@@ -452,7 +456,7 @@ double Engine::updateSpool()
 	m_deltaSpoolABS = abs(m_deltaSpool);
 	//m_spoolFactor = EngDel(m_deltaSpoolABS);//die alte Idee mit der Alten "Table"
 	int indexInArray = m_deltaSpoolABS / 0.02; //hier wird der Index für den Array aus einer "double" in eine "int" umgemünzt, damit ganze Zahlen generiert werden// kein Factor, damit nicht außerhalb des Arrays verschoben wird
-	m_spoolFactor = (DAT_EngSpool[indexInArray])/5;//Variale indexInArray ergibt diejenige Zahl die dem Index in dem Array entspricht// /5 hinzugefügt, für langsameres Ansprechen testweise
+	m_spoolFactor = (DAT_EngSpool[indexInArray]) / 6.0;//Variale indexInArray ergibt diejenige Zahl die dem Index in dem Array entspricht// /5 hinzugefügt, für langsameres Ansprechen testweise/ jetzt auf 6.0 erhöht
 	m_newSpoolStep = m_deltaSpool * m_spoolFactor;
 	m_newThrottle = m_oldThrottle + m_newSpoolStep;
 	
@@ -555,12 +559,12 @@ double Engine::overHeatCount()
 	bool CounterGo = false;
 	bool CounterBack = false;
 
-	if ((((m_state.m_mach > 1.15) && (m_state.m_mach <= 1.25)) && (m_state.m_airDensity > 1.112)) || (((m_state.m_mach > 1.40) && (m_state.m_mach <= 1.55)) && ((m_state.m_airDensity > 0.9093) && (m_state.m_airDensity <= 1.112))) || (((m_state.m_mach > 1.70) && (m_state.m_mach <= 1.9)) && ((m_state.m_airDensity > 0.6601) && (m_state.m_airDensity < 0.9093))) || (((m_state.m_mach > 2.3) && (m_state.m_mach <= 2.5)) && (m_state.m_airDensity < 0.6601)))
+	if ((((m_state.m_mach > 1.17) && (m_state.m_mach <= 1.25)) && (m_state.m_airDensity > 1.112)) || (((m_state.m_mach > 1.40) && (m_state.m_mach <= 1.55)) && ((m_state.m_airDensity > 0.9093) && (m_state.m_airDensity <= 1.112))) || (((m_state.m_mach > 1.70) && (m_state.m_mach <= 1.9)) && ((m_state.m_airDensity > 0.6601) && (m_state.m_airDensity < 0.9093))) || (((m_state.m_mach > 2.2) && (m_state.m_mach <= 2.3)) && (m_state.m_airDensity < 0.6601)))
 	{
 		m_heatOne = 0.00001;
 		CounterGo = true;
 	}
-	else if (((m_state.m_mach > 1.25) && (m_state.m_airDensity > 1.112)) || ((m_state.m_mach > 1.55) && ((m_state.m_airDensity > 0.9093) && (m_state.m_airDensity <= 1.112))) || ((m_state.m_mach > 1.90) && ((m_state.m_airDensity > 0.6601) && (m_state.m_airDensity < 0.9093))) || ((m_state.m_mach > 2.5) && (m_state.m_airDensity < 0.6601)))
+	else if (((m_state.m_mach > 1.25) && (m_state.m_airDensity > 1.112)) || ((m_state.m_mach > 1.55) && ((m_state.m_airDensity > 0.9093) && (m_state.m_airDensity <= 1.112))) || ((m_state.m_mach > 1.90) && ((m_state.m_airDensity > 0.6601) && (m_state.m_airDensity < 0.9093))) || ((m_state.m_mach > 2.3) && (m_state.m_airDensity < 0.6601)))
 	{
 		m_heatOne = 0.00005;
 		CounterGo = true;
@@ -648,7 +652,7 @@ double Engine::overSpeedInd()
 {
 	if (m_input.getElectricSystem() == 1.0)
 	{
-		if (((m_state.m_mach > 1.10) && (m_state.m_airDensity > 1.112)) || ((m_state.m_mach > 1.25) && ((m_state.m_airDensity > 0.9093) && (m_state.m_airDensity <= 1.112))) || ((m_state.m_mach > 1.60) && ((m_state.m_airDensity > 0.6601) && (m_state.m_airDensity < 0.9093))) || ((m_state.m_mach > 2.2) && (m_state.m_airDensity < 0.6601)))
+		if (((m_state.m_mach > 1.114) && (m_state.m_airDensity > 1.112)) || ((m_state.m_mach > 1.25) && ((m_state.m_airDensity > 0.9093) && (m_state.m_airDensity <= 1.112))) || ((m_state.m_mach > 1.60) && ((m_state.m_airDensity > 0.6601) && (m_state.m_airDensity < 0.9093))) || ((m_state.m_mach > 2.2) && (m_state.m_airDensity < 0.6601)))
 		{
 			m_overSpeedInd = 1.0;
 		}

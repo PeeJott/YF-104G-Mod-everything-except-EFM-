@@ -714,7 +714,29 @@ void ed_fm_set_command(int command,
 	case COMMAND_THROTTLE_DETEND:
 		s_input->m_starterbutton = value;
 		break;*/
-	
+	case COMMAND_MASTER_AA_1:
+		s_input->masterAtoA1();
+		break;
+	case COMMAND_MASTER_AA_2:
+		s_input->masterAtoA2();
+		break;
+	case COMMAND_MASTER_AA_3:
+		s_input->masterAtoA3();
+		break;
+	case COMMAND_MASTER_AA_4:
+		s_input->masterAtoA4();
+		break;
+	case COMMAND_MASTER_AG:
+		s_input->masterAtoG();
+		break;
+	case COMMAND_MASTER_NAVI:
+		s_input->masterNAVI();
+		break;
+	case COMMAND_MASTER_GUN:
+		s_input->masterGUN();
+		break;
+
+
 	default:
 		printf("number %d: %llf\n", command, value); //neu eingefügt um "unbekannte" Kommandos zur Konsole auszugeben
 	}
@@ -926,6 +948,17 @@ void ed_fm_set_fc3_cockpit_draw_args_v2(float* data, size_t size)
 	data[618] = s_airframe->getAltIndThousands();//Altimeter 1000er
 	data[619] = s_airframe->getAltIndTenThousands();//Altimeter 10000er
 	data[620] = s_airframe->getAltIndHundreds();//Altimeter in 10er
+	data[612] = s_airframe->overSpeedFlapDamageInd();//Indcator for overspeed flap damage
+	data[613] = s_airframe->overSpeedGearDamageInd();//Indicator for overspeed gear damage
+	data[614] = s_flightModel->getStabAugSystem();//Indicator for function of stability augmentation system for pitch axis
+	data[621] = s_airframe->getPylonIndLightA();//pylon indicator loghts 0.0; 0.5; 1.0 == off; inner; on
+	data[622] = s_airframe->getPylonIndLightG();
+	data[623] = s_airframe->getPylonIndLightG();
+	data[624] = s_airframe->getPylonIndLightG();
+	data[625] = s_airframe->getPylonIndLightG();
+	data[626] = s_airframe->getPylonIndLightA();
+	data[627] = s_airframe->gunIndSwitch();//gun-selector-switch 0.0; 1.0
+	data[628] = s_airframe->getGearLeverLamp();//Gear-Lever-Lamp an bei 0.0 > und < 1.0; bei 0.0 und 1.0 aus.
 
 }
 
@@ -975,7 +1008,7 @@ case ED_FM_ANTI_SKID_ENABLE:
 case ED_FM_SUSPENSION_0_WHEEL_SELF_ATTITUDE:
 	return s_input->getNWS() == 1.0 ? 0.0 : 1.0; //was return s_airframe->NWSstate() == 1.0 ? 1.0 : 0.0;
 case ED_FM_SUSPENSION_0_WHEEL_YAW:
-	return s_airframe->getNoseWheelAngle(); //> 0.5 ? -s_input.m_yaw * 0.5 : 0.0; //rotation to 45 degrees, half 90 (range of the wheel)
+	return s_airframe->getNoseWheelAngle() * 0.65; //war 1.0 dan 0.75 //> 0.5 ? -s_input.m_yaw * 0.5 : 0.0; //rotation to 45 degrees, half 90 (range of the wheel)
 
 //Engine-Stuff
 case ED_FM_ENGINE_1_CORE_RPM: //RPM in Rad/s
@@ -1030,6 +1063,14 @@ case ED_FM_FC3_THROTTLE_RIGHT:
 case ED_FM_FC3_GEAR_HANDLE_POS:
 	return s_input->getGearToggle();
 
+case ED_FM_STICK_FORCE_CENTRAL_PITCH:
+	return 0.0;
+case ED_FM_STICK_FORCE_FACTOR_PITCH:
+	return 0.75;
+case ED_FM_STICK_FORCE_CENTRAL_ROLL:
+	return 0.0;
+case ED_FM_STICK_FORCE_FACTOR_ROLL:
+	return 0.75;
 
 
 
@@ -1095,6 +1136,7 @@ void ed_fm_hot_start_in_air()
 void ed_fm_repair()
 {
 	s_airframe->resetDamage();
+	s_airframe->resetOSdamage();
 	s_engine->repairHeatDamage();
 }
 
@@ -1102,6 +1144,10 @@ bool ed_fm_need_to_be_repaired()
 {
 	if (s_engine->overHeatInd() == 1.0)
 		return true;
+	if ((s_airframe->overSpeedGearDamageInd() == 1.0) || (s_airframe->overSpeedFlapDamageInd() == 1.0))
+	{
+		return true;
+	}
 	else
 	{
 		return false;

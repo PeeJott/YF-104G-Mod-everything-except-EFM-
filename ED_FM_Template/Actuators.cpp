@@ -51,6 +51,16 @@ void Actuator::airborneInit()
 	
 }
 
+void Actuator::setOverSpeedMalFunction()
+{
+	m_overSpeedMalFunction = true;
+}
+
+void Actuator::revOverSpeedMalFunction()
+{
+	m_overSpeedMalFunction = false;
+}
+
 double Actuator::inputUpdate(double targetPosition, double dt)
 {
 	m_actuatorTargetPos = targetPosition;
@@ -66,6 +76,11 @@ void Actuator::physicsUpdate(double dt)
 
 
 	double actuatorSpeed = 0.0;
+
+	if (m_overSpeedMalFunction == true)
+	{
+		return;
+	}
 
 	// dependent on aerodynamic load
 	if (m_actuatorPos > 0.0)

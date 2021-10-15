@@ -79,6 +79,15 @@ enum Command
 	COMMAND_WHEELBRAKE_LEFT = 2112,
 	COMMAND_WHEELBRAKE_RIGHT = 2113,
 
+	COMMAND_MASTER_AA_1 = 110,
+	COMMAND_MASTER_AA_2 = 108,
+	COMMAND_MASTER_AA_3 = 107,
+	COMMAND_MASTER_AA_4 = 106,
+	COMMAND_MASTER_AG = 111,
+	COMMAND_MASTER_GUN = 113,
+	COMMAND_MASTER_NAVI = 105,
+
+
 
 	//--------------------------------------
 
@@ -156,6 +165,15 @@ class Input
 
 			m_brakeLeftWheel = 0.0;
 			m_brakeRightWheel = 0.0;
+
+			m_masterAtoA1 = 0.0;
+			m_masterAtoA2 = 0.0;
+			m_masterAtoA3 = 0.0;
+			m_masterAtoA4 = 0.0;
+			m_masterAtoG = 0.0;
+			m_masterGUN = 0.0;
+			m_masterNavi = 0.0;
+
 
 		}
 
@@ -647,6 +665,139 @@ class Input
 			return m_electricSystem;
 		}
 
+		inline const void masterAtoA1()
+		{
+			if (m_masterAtoA1 == 0.0)
+			{
+				m_masterAtoA1 = 1.0;
+				m_masterAtoG = 0.0;
+				m_masterNavi = 0.0;
+				m_masterGUN = 0.0;
+			}
+			
+		}
+
+		inline const double getMasterAtoA1()
+		{
+			return m_masterAtoA1;
+		}
+
+		inline const void masterAtoA2()
+		{
+			if (m_masterAtoA2 == 0.0)
+			{
+				m_masterAtoA2 = 1.0;
+				m_masterAtoG = 0.0;
+				m_masterNavi = 0.0;
+				m_masterGUN = 0.0;
+			}
+			
+		}
+
+		inline const double getMasterAtoA2()
+		{
+			return m_masterAtoA2;
+		}
+
+		inline const void masterAtoA3()
+		{
+			if (m_masterAtoA3 == 0.0)
+			{
+				m_masterAtoA3 = 1.0;
+				m_masterAtoG = 0.0;
+				m_masterNavi = 0.0;
+				m_masterGUN = 0.0;
+			}
+			
+		}
+
+		inline const double getMasterAtoA3()
+		{
+			return m_masterAtoA3;
+		}
+
+		inline const void masterAtoA4()
+		{
+			if (m_masterAtoA4 == 0.0)
+			{
+				m_masterAtoA4 = 1.0;
+				m_masterAtoG = 0.0;
+				m_masterNavi = 0.0;
+				m_masterGUN = 0.0;
+			}
+			
+		}
+
+		inline const double getMasterAtoA4()
+		{
+			return m_masterAtoA4;
+		}
+
+		inline const void masterAtoG()
+		{
+			if (m_masterAtoG == 0.0)
+			{
+				m_masterAtoG = 1.0;
+				m_masterAtoA1 = 0.0;
+				m_masterAtoA2 = 0.0;
+				m_masterAtoA3 = 0.0;
+				m_masterAtoA4 = 0.0;
+				m_masterNavi = 0.0;
+				m_masterGUN = 0.0;
+
+			}
+			
+		}
+
+		inline const double getMasterAtoG()
+		{
+			return m_masterAtoG;
+		}
+
+		inline const void masterGUN()
+		{
+			if (m_masterGUN == 0.0)
+			{
+				m_masterGUN = 1.0;
+				m_masterAtoA1 = 0.0;
+				m_masterAtoA2 = 0.0;
+				m_masterAtoA3 = 0.0;
+				m_masterAtoA4 = 0.0;
+				m_masterNavi = 0.0;
+				m_masterAtoG = 0.0;
+			}
+			
+		}
+
+		inline const double getMasterGUN()
+		{
+			return m_masterGUN;
+		}
+
+		inline const void masterNAVI()
+		{
+			if (m_masterNavi == 0.0)
+			{
+				m_masterNavi = 1.0;
+				m_masterAtoA1 = 0.0;
+				m_masterAtoA2 = 0.0;
+				m_masterAtoA3 = 0.0;
+				m_masterAtoA4 = 0.0;
+				m_masterAtoG = 0.0;
+				m_masterGUN = 0.0;
+			}
+	
+		}
+
+		inline const double getMasterNAVI()
+		{
+			return m_masterNavi;
+		}
+
+
+
+
+
 //----------Crosshair-Test-Functions-------------
 
 		inline const void crossHRight()
@@ -752,6 +903,7 @@ class Input
 		{
 			return m_sightVertical;
 		}
+
 
 //---------Key Command Functions-----------------
 		inline const double elevUpGO()
@@ -1068,5 +1220,12 @@ class Input
 	double m_brakeLeftWheel = 0.0;
 	double m_brakeRightWheel = 0.0;
 
+	double m_masterAtoA1 = 0.0;
+	double m_masterAtoA2 = 0.0;
+	double m_masterAtoA3 = 0.0;
+	double m_masterAtoA4 = 0.0;
+	double m_masterAtoG = 0.0;
+	double m_masterGUN = 0.0;
+	double m_masterNavi = 0.0;
 };
 
