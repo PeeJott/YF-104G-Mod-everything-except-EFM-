@@ -17,7 +17,7 @@ MainPanel = {"ccMainPanel",LockOn_Options.script_path.."mainpanel_init.lua"}
 creators = {}
 
 creators[devices.HUD_SYSTEM] 			={"avLuaDevice"			,LockOn_Options.script_path.."Systems/HUD_System.lua"}
-creators[devices.GUN_PIPPER]			={"avLuaDevice"			,LockOn_Options.script_path.."Systems/GUN_PIPPER.lua"}
+--creators[devices.GUN_PIPPER]			={"avLuaDevice"			,LockOn_Options.script_path.."Systems/GUN_PIPPER.lua"}
 
 
 -- Indicators

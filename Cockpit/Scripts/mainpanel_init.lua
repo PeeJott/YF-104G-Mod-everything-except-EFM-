@@ -12,6 +12,14 @@ local  aircraft = get_aircraft_type()
 
 local controllers = LoRegisterPanelControls()
 
+--HUD_BRIGHTNESS_DOWN      			  = CreateGauge("parameter")
+--HUD_BRIGHTNESS_DOWN.parameter_name   = "HUDBrightnessDown"
+--HUD_BRIGHTNESS_DOWN.arg_number    	  = 0
+--HUD_BRIGHTNESS_DOWN.input    		  = {0,100}
+--HUD_BRIGHTNESS_DOWN.output    		  = {0,1}
+
+need_to_be_closed = true -- schließt diese Lua nach der Initialisierung
+
 -- RudderPedals						= CreateGauge()
 -- RudderPedals.arg_number				= 500
 -- RudderPedals.input					= {-100,100}

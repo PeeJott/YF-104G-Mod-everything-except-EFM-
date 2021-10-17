@@ -8,7 +8,7 @@ local sensor_data		= get_base_data()
 local update_time_step = 0.01 --1/100
 make_default_activity(update_time_step)
 
---local Parameter = get_param_handle("HUDBrightnessDown") //Test für später
+--local Parameter = get_param_handle("HUDBrightnessDown") //Test fÃ¼r spÃ¤ter
 --Parameter:set(0)
 
 ------------------------------------------------------------------FUNCTION-POST-INIT---------------------------------------------------------------------------------------------------
@@ -225,6 +225,8 @@ function update()
 	dispatch_action(nil, 747)]]
 	
 
+	
+	
 
 
 end

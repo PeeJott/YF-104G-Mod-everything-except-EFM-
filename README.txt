@@ -1,17 +1,38 @@
-29.03.2021
 
-Achtung, das ist ein privater Mod.
+15.10.2021
 
-RECHTLICHER HINWEIS
-*******************
-Alle Komponenten in diesem Mod sind urheberrechtlich geschützt und darf nicht ohne Genehmigung verwendet werden. Die Verbreitung dieser Datei im Internet oder auf anderen Medien ist nicht erlaubt.
+VSN_F104G 2.7.5.01
 
-- Der Source-Code ist urheberrechtlich geschützt und darf nicht verwendet werden. 
-- Das EFM ist urheberrechtlich geschützt und darf nicht verwendet werden.
-- Die *.dll und dazugehörenden Dateien sind urheberrechtlich geschützt und darf nicht verwendet werden.
-- Die SFM Daten sind urheberrechtlich geschützt und darf nicht verwendet werden.
+- F-104G EFM
+- F-104G Cockpit
+- VSN_F104G_AG entfernt
+- Flugzeug Auswahl wird in der Liveris erstellt.
 
-DCS 2.5.6 
+custom_args =
+{
+    [70] = 0, -- F-104G=0 / CF-104=0.45 Early / CF-104=0.5 / F-104S=1
+    [801] = 0.0, --C-2 seat=1.0
+}
+
+
+
+14.04.2020
+
+VSN_F104G 2.5.6.02
+- VSN_F104S + VSN_F104S_AG hinzugefügt
+- psd_template der F-104S hinzugefügt (VSN_F104G-S_psd_template.zip)
+
+VSN_F104G 2.5.4.02
+- Textur Fehler im Bereich des Hud korrigiert
+- Textur Auflösung 4096
+
+VSN_F104G 2.5.4.01
+- Tank korrigiert.
+- Skins hinzugefügt
+- CMD hinzugefügt (Avionik Auswahl)
+- AG Waffen hizugefügt.
+
+DCS 2.5.4 Beta1 FREEWARE RELEASE
 
 
 Dieser Mod benötigt das DCS: Flaming Cliffs 3 (FC3) Modul 
@@ -25,11 +46,11 @@ https://lockonforum.de/community/thread/6667-flyable-fc3-flieger-mit-3d-f-15c-co
 
 RECHTLICHER HINWEIS
 *******************
-Dieser XF104G Mod ist ein privater urheberrechtlich geschützter Mod.
-Das gesamte Originalmaterial ist urheberrechtlich geschützt und darf verwendet werden.
-Das Umpacken oder Modifizieren dieses Pakets und seines Inhalts ist nicht gestattet.
-Die Verbreitung dieser Datei im Internet oder auf anderen Medien ist nicht erlaubt.
-Jede Art von Verteilung, die den Tausch von Geld beinhaltet, ist nicht erlaubt.
+Dieser VSN_F104G Mod ist FREEWARE.
+Das gesamte Originalmaterial ist urheberrechtlich geschützt und darf nicht ohne Genehmigung verwendet werden.
+Das Umpacken oder Modifizieren dieses Pakets und seines Inhalts ist ohne Genehmigung nicht gestattet.
+Die Verbreitung dieser Datei im Internet oder auf anderen Medien ist erlaubt, sofern sie kostenlos und ohne Veränderung der Originaldatei erfolgt.
+Jede Art von Verteilung, die den Tausch von Geld beinhaltet, ist ohne Genehmigung nicht erlaubt.
 
 Diese Software wird ohne jegliche ausdrückliche oder stillschweigende Garantie vertrieben. 
 Diese Software sollte und wird keine Schäden an Ihrem System verursachen, dennoch ist der Autor nicht verantwortlich, für alle Schäden, die durch diese Software verursacht wird.
@@ -41,22 +62,36 @@ Dieser Mod enthält lizenzfreie Texte aus Wikipedia.
 CREDITS
 *******
 Gekauft von						- Gerritboom
-EFM								- PeeJott/Paul
-SFM								- PeeJott/Paul
-dll								- PeeJott/Paul
+VSN_F104G Mod					- cdpkobra
+EFM								- PeeJott
+EFM unterstützung				- JNelson, TheRealHarold, Firebird, A4-Team
+Aerodynamics 					- GVAD, Talo, Niclas
 Modellierung, Animationen 		- cdpkobra
-XF104G Mod						- cdpkobra
+Modellaktualiesierungen			- Soulfreak
+Cockpit							- cdpkobra
+Cockpit Textur					- GLOBAL HAWK
 RoughMet Dateien 				- cdpkobra
-Icons 							- Ozone1
-SU-27 EnglishGrayCockpitMod		- DEVRiM
 VSN_F104G_psd_template			- file404
 VSN_F104S_psd_template			- file404
 JaboG 32 Skin					- file404
 4 Stormo Skin					- file404
-MFG 2 Bundesmarine Skin			- Gerritboom
+Liveris							- by jocko417
+Liveris							- by Soulfreak
+Icons 							- Ozone1
+Theme							- Yogi
+
+Wen ich jemanden vergessen habe, bitte bei mir melden und ich trage es ein.
 
 
-Das 3D-Modell des F-104 Starfighter basiert auf 3D-Daten von file404, die über Turbosquid erworben und als Referenz in der Modellierung verwendet wurde.
+Das 3D-Modell des F-104G Starfighter basiert auf 3D-Daten von file404, die über Turbosquid erworben und als Referenz in der Modellierung verwendet wurde.
+
+Das 3D-Modell des F-104S Starfighter basiert auf 3D-Daten von file404, die über Turbosquid erworben und als Referenz in der Modellierung verwendet wurde.
+
+Das 3D-Modell des F-104 Starfighter Cockpit basiert auf 3D-Daten von Tolis die erworben und als Referenz in der Modellierung verwendet wurde.
+
+Der Quellcode des EFM steht unter der im dortigen Unterordner eingebrachten Lizenz. Die Weiterverwendung und Verbreitung des Quellcodes unterliegt den dort abgedruckten Lizenzbestimmungen.
+Der Quellcode ist zum download verfügbar im F-104G Discord oder per Kontaktnachricht an PeeJott über das LockOn-Forum.
+
 
 
 KONTAKTDATEN
