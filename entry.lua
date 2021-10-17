@@ -80,13 +80,15 @@ dofile(cfg_path)
 F104G[1]             = self_ID
 F104G[2]             = 'F104G'
 F104G.config_path     = cfg_path
-F104G.old             = 6 -- SU27-3, SU33-4, F-15-6, SU25-54
+--F104G.old             = 6 -- SU27-3, SU33-4, F-15-6, SU25-54
 
-dofile(current_mod_path.."/LUA/Views_F104Pit.lua")
-make_view_settings('VSN_F104G', ViewSettings, SnapViews)
-make_flyable('VSN_F104G',current_mod_path..'/Cockpit/KneeboardRight/', F104G, current_mod_path..'/comm.lua')--EFM
---make_flyable('VSN_F104G',current_mod_path..'/Cockpit/Scripts/', F104G, current_mod_path..'/comm.lua')--EFM
+
+--make_flyable('VSN_F104G',current_mod_path..'/Cockpit/KneeboardRight/', F104G, current_mod_path..'/comm.lua')--EFM
+make_flyable('VSN_F104G',current_mod_path..'/Cockpit/Scripts/', F104G, current_mod_path..'/comm.lua')--EFM
 -------------------------------------------------------------------------------------
+
+
+--[[
 local cfg_path = current_mod_path ..  "/FM/F104G/config.lua"
 dofile(cfg_path)
 F104G[1]             = self_ID
@@ -111,8 +113,12 @@ make_view_settings('VSN_F104S_AG', ViewSettings, SnapViews)
 make_flyable('VSN_F104S_AG',current_mod_path..'/Cockpit/KneeboardRight/', F104G, current_mod_path..'/comm.lua')--EFM
 --make_flyable('VSN_F104S_AG',current_mod_path..'/Cockpit/Scripts/', F104G, current_mod_path..'/comm.lua')--EFM
 -------------------------------------------------------------------------------------
+]]--
 dofile(current_mod_path..'/VSN_F104G.lua')
-dofile(current_mod_path..'/VSN_F104S.lua')
-dofile(current_mod_path..'/VSN_F104S_AG.lua')
+
+dofile(current_mod_path.."/LUA/Views_F104Pit.lua")
+make_view_settings('VSN_F104G', ViewSettings, SnapViews)
+--dofile(current_mod_path..'/VSN_F104S.lua')
+--dofile(current_mod_path..'/VSN_F104S_AG.lua')
 -------------------------------------------------------------------------------------
 plugin_done()

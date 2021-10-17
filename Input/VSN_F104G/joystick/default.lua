@@ -1,4 +1,9 @@
+local cscripts = folder.."../../../Cockpit/Scripts/"
+dofile(cscripts.."devices.lua")
+dofile(cscripts.."command_defs.lua")
+
 local res = external_profile("Config/Input/Aircrafts/base_joystick_binding.lua")
+
 
 join(res.keyCommands,{
 {down = iCommandPlaneAutopilot, name = _('Autopilot - Attitude Hold'), category = _('Autopilot')},
@@ -69,7 +74,8 @@ join(res.keyCommands,{
 
 -- Weapons                                                                        
 {down = iCommandPlaneSalvoOnOff, name = _('Salvo Mode'), category = _('Weapons')},
-{combos = {{key = 'JOY_BTN2'}}, down = iCommandPlanePickleOn,	up = iCommandPlanePickleOff, name = _('Weapon Release'), category = _('Weapons')},
+{combos = {{key = 'JOY_BTN2'}}, down = Keys.pickle_on,	up = Keys.pickle_off, name = _('Weapon Release'), category = _('Weapons')},
+{combos = {{key = 'JOY_BTN1'}}, down = Keys.trigger_on,	up = Keys.trigger_off, name = _('Gun Trigger'), category = _('Weapons')},
 --{down = iCommandChangeGunRateOfFire, name = _('Cannon Rate Of Fire / Cut Of Burst select'), category = _('Weapons')},
 })
 -- joystick axes 

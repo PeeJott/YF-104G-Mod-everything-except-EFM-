@@ -7,4 +7,6 @@ end
 devices = {}
 devices["HUD_SYSTEM"]			= counter() --Nummer 1
 devices["GUN_PIPPER"]			= counter() --Nummer 2
+devices["ELECTRIC_SYSTEM"]      = counter()
+devices["WEAPON_SYSTEM"]        = counter()
 
