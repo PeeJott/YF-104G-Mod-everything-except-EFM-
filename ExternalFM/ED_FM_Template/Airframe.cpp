@@ -134,6 +134,13 @@ void Airframe::zeroInit()
 	m_altIndTens = 0.0;
 	m_retAltIndTK = 0.0;
 	m_retAltIndK = 0.0;
+
+	m_qnhVar = 101320;//NEU statt 101325.0
+	m_indQnhThousand = 0.0;
+	m_indQnhHundred = 0.0;
+	m_indQnhTen = 0.0;
+	m_indQnhOne = 0.0;
+	m_retIndQnhHundred = 0.0;
 	
 	m_aileronLeft = 0.0;
 	m_aileronRight = 0.0;
@@ -729,10 +736,7 @@ void Airframe::airframeUpdate(double dt)
 	moveSightVertical();
 
 
-
 	
-
-	//printf("Input_CrossH_Right %f \n", m_input.getCrossHRight());
 	//printf("Input_CrossH_Left %f \n", m_input.getCrossHLeft());
 	//printf("CrossH_Hori %f \n", m_crossHairHori);
 
@@ -770,9 +774,10 @@ void Airframe::airframeUpdate(double dt)
 	//printf("Vertikale Sicht FLOAT %f \n", m_input.getSightVertical());
 
 	//printf("Flap-Overspeed %f \n", m_flapOSind);
-	//printf("Gear-Overspeed %f \n", m_gearOSind);
+	//printf("GearPosition %f \n", m_gearNPosition);
 
-
+	printf("QNH_Value %f \n", m_input.getQnhValue());
+	printf("QNH_Variable %f \n", m_qnhVar);
 }
 
 //-------------Neu eingefügt für multiplikator AERO-Surfaces--------------
@@ -1432,7 +1437,7 @@ void Airframe::autoPilotAltH(double dt)
 		m_acend = false;
 	}
 
-	if (m_state.m_angle.z < 0.0)
+	if ((m_state.m_angle.z < 0.0) || ((m_state.m_angle.z) - (m_state.m_aoa) < 0.0)) //|| ((m_state.m_angle.z) - (m_state.m_aoa) < 0.0)) neu eingefügt 24.10.
 	{
 		m_decend = true;
 	}
@@ -1644,9 +1649,24 @@ double Airframe::airSpeedInMachInd()
 
 void Airframe::altitudeInd()
 {
+	
+	//--------------Hier ist die alte starre Höhenformel, die auf der std.day Atmosphäre bei 0m Höhe aufbaut. In einer variablen barometrischen Messung muss 101325.0 ersetzt werden durch die QNH-Variable
+	/*
 	if (m_input.getElectricSystem() == 1.0)
 	{
 		m_altInM = ((288.15 / 0.0065) * (1.0 - pow((m_state.m_pressure / 101325.00), (1.0 / 5.255))));
+	}
+	else
+	{
+		m_altInM = 0;
+	}
+	*/
+	//-----------------Neue Formel mit Variablen
+	m_qnhVar = m_input.getQnhValue();
+	//-----------Altitude Formel--------------------------------------------------------------------
+	if (m_input.getElectricSystem() == 1.0)
+	{
+		m_altInM = ((288.15 / 0.0065) * (1.0 - pow((m_state.m_pressure / m_qnhVar), (1.0 / 5.255))));
 	}
 	else
 	{
@@ -1662,6 +1682,12 @@ void Airframe::altitudeInd()
 
 	m_retAltIndTK = m_altIndTenThousands / 10.0;
 	m_retAltIndK = m_altIndThousands / 10.0;
+
+	//----------------QNH Variablen------------------------------------------------------------
+	m_indQnhThousand = m_qnhVar / 100000; //gibt 101320 / 100000 = 1 (da int); bei unter 1 = 0 
+	m_indQnhHundred = (m_qnhVar % 100000) / 10000; //gibt bei 101320 = 01320 = 1320 / 10000 = 0.132 gibt "0" (da int)// bei 098855 = 98855 / 10000 = 9.8855 = "9" (da int) 
+	m_indQnhTen = (m_qnhVar % 10000) / 1000;// bei 101320 = 1320 / 1000 = 1.32
+	m_indQnhOne = (m_qnhVar % 1000) / 100;// bei 101320 = 320 / 100 = 3.2
 }
 
 double Airframe::getAltIndTenThousands()
@@ -1682,6 +1708,35 @@ double Airframe::getAltIndHundreds()
 double Airframe::getAltIndTens()
 {
 	return m_altIndTens / 10.0;
+}
+
+double Airframe::getQNHinThousand()
+{
+	return m_indQnhThousand;
+}
+
+double Airframe::getQNHinHundred()
+{
+	if (m_indQnhHundred >= 9.0)
+	{
+		m_retIndQnhHundred = 0.0;
+	}
+	else
+	{
+		m_retIndQnhHundred = 1.0;
+	}
+
+	return m_retIndQnhHundred;
+}
+
+double Airframe::getQNHinTen()
+{
+	return m_indQnhTen / 10.0;
+}
+
+double Airframe::getQNHinOne()
+{
+	return m_indQnhOne / 10.0;
 }
 
 //-------------------Gear and Flap overspeed Damage functions----------------

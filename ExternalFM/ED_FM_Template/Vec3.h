@@ -164,5 +164,25 @@ inline double magnitudeSquared( const Vec3& a )
 	return dot( a, a );
 }
 
+inline Vec3 rotate(const Vec3& v, const double pitch, const double yaw)
+{
+	double cosa = cos(pitch);
+	double sina = sin(pitch);
+	double cosb = cos(yaw);
+	double sinb = sin(yaw);
+
+	Vec3 result = v;
+	result.x = cosb * cosa * v.x + sinb * v.z - cosb * sina * v.y;
+	result.y = sina * v.x + cosa * v.y;
+	result.z = -cosa * sinb * v.x + cosb * v.z + sina * sinb * v.y;
+	
+	return result;
+}
+
+inline Vec3 windAxisToBodyAxis(const Vec3& p_force, const double& rad_alpha, const double& rad_beta)
+{
+	return rotate(p_force, -rad_alpha, rad_beta);
+}
+
 //#endif
 

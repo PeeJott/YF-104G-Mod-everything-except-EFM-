@@ -211,7 +211,7 @@ void Engine::update(double dt)
 
 	//heatCoolDown();
 
-	//printf("FuelFlow_Real %f \n", FuelFlowUpdate());
+	//printf("Throttle_Position %f \n", m_input.getThrottle());
 	/*printf("FuelIndicator %f \n", m_heatTimerUP);
 	printf("OHStage %f \n", m_overHeat);
 	printf("OverSpeedInd %f \n", m_overSpeedInd);
@@ -371,6 +371,7 @@ double Engine::FuelFlowUpdate()
 	
 	double corrThrottle = 0.0;
 
+		
 	if (m_input.getThrottle() >= 0.0)
 	{
 		corrThrottle = (1.0 - CON_ThrotIDL) * m_input.getThrottle() + CON_ThrotIDL;
@@ -379,6 +380,7 @@ double Engine::FuelFlowUpdate()
 	{
 		corrThrottle = (m_input.getThrottle() + 1.0) / 2.0;
 	}
+	
 
 	
 	m_deltaSpoolFuel = corrThrottle - m_oldThrottleFuel;
@@ -450,6 +452,7 @@ double Engine::updateSpool()
 	{
 		corrThrottle = (m_input.getThrottle() + 1.0) / 2.0;
 	}
+	
 	
 	
 	m_deltaSpool = corrThrottle - m_oldThrottle;

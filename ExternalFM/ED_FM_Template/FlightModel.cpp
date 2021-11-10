@@ -88,7 +88,8 @@ FlightModel::FlightModel
 	PitAoA(DAT_PitchAoA, CON_PitAoAMin, CON_PitAoAMax),
 	PitMult(DAT_PitchMult, CON_PitMulMin, CON_PitMulMax),
 	StAoA(DAT_StallAoA, CON_StAoAMin, CON_StAoAMax),
-	StAoAMulti(DAT_StAoAMulti, CON_StAoAMulti_Min, CON_StAoAMulti_Max)
+	StAoAMulti(DAT_StAoAMulti, CON_StAoAMulti_Min, CON_StAoAMulti_Max),
+	CLzero(DAT_CLzero, CON_CLzeroMin, CON_CLzeroMax)
 	
 	//der letzte Eintrag darf KEIN Komma haben...
 
@@ -106,6 +107,26 @@ void FlightModel::zeroInit()
 	m_k = 0.0;
 	CLblc = 0.0;
 
+	//----------NEU TESTWEISE-----------------
+	//----------TESTWEISE um Spin Probleme zu testen bei Rotation der Forces------- 
+	/*Clb_b = 0.0;
+	Clp_b = 0.0;
+	Clr_b = 0.0;
+	Clda_b = 0.0;
+	Cldr_b = 0.0;
+
+	Cnb_b = 0.0;
+	Cnp_b = 0.0;
+	Cnr_b = 0.0;
+	Cnda_b = 0.0;
+
+	CosAoA = 0.0;
+	SinusAoA = 0.0;
+	CosAoA2 = 0.0;
+	SinAoA2 = 0.0;*/
+	//-------------Nach dem Test ggf. auskommentieren oder entfernen---------------
+	//------------ENDE NEU--------------------------------------------------------
+
 	m_thinAirMulti = 0.0;
 
 	m_scalarVelocitySquared = 0.0;
@@ -116,6 +137,7 @@ void FlightModel::zeroInit()
 
 	m_ailDeflection = 0.0;
 	m_rudDeflection = 0.0;
+	m_elevDeflection = 0.0;
 	
 	//m_state.m_mach = 0.0;
 	//m_state.m_beta = 0.0;
@@ -123,6 +145,11 @@ void FlightModel::zeroInit()
 	
 	m_pitchup = 0.0;
 	m_stallMult = 0.0;
+
+	m_zeroLift = 0.0;
+	m_setLiftZero = 0.0;
+	m_stallIndRoll = 0.0;
+	m_stallIndDrag = 0.0;
 
 	m_CmqStAg = 0.0;
 	m_CmaDOTStAg = 0.0;
@@ -183,6 +210,23 @@ void FlightModel::airborneInit()
 	zeroInit();
 }
 
+void FlightModel::calculateAeroRotateMoments()
+{
+	//hierfür muss noch Cnp und Cnda angelegt werden, damit die Momente gem. Harold übertragen werden können
+	
+	/*CosAoA = cos(m_state.m_aoa);
+	SinusAoA = sin(m_state.m_aoa);
+
+	CosAoA2 = CosAoA * CosAoA;
+	SinAoA2 = SinusAoA * SinusAoA;
+
+	//----------Konvertiertung der Momente von der Stabilitäts zu der KörperAchse----------
+	Cnb_b = CnbNEW(m_state.m_mach) * CosAoA + Clb(m_state.m_mach) * SinusAoA;
+	// fehlt noch Cnp_b = Cnp(m_state.m_mach) 
+	Cnr_b = Cnr(m_state.m_mach) * CosAoA2
+    */
+}
+
 void FlightModel::L_stab()
 {
 	//set roll moment -- 
@@ -196,7 +240,7 @@ void FlightModel::L_stab()
 	*/
 
 	//-------------------------NEUE Versíon MIT Beschränkung des Max-Ausschalgs--------------------------------------------------------
-	m_moment.x += m_q * (Clb(m_state.m_mach) * m_state.m_beta + Clda(m_state.m_mach) * (((m_input.getRoll() * m_ailDeflection) + m_input.getTrimmAilR() - m_input.getTrimmAilL()) * m_ailDamage) + (m_lWingDamageCD + m_rWingDamageCD) + (0.55 * Cldr(m_state.m_mach)) * (m_input.getYaw() * m_rudDeflection))
+	m_moment.x += m_q * (Clb(m_state.m_mach) * m_state.m_beta + Clda(m_state.m_mach) * (((m_input.getRoll() * m_ailDeflection) + m_input.getTrimmAilR() - m_input.getTrimmAilL()) * m_ailDamage + m_stallIndRoll) + (m_lWingDamageCD + m_rWingDamageCD) + (0.55 * Cldr(m_state.m_mach)) * (m_input.getYaw() * m_rudDeflection))
 		+ 0.25 * m_state.m_airDensity * m_scalarVelocity * CON_A * CON_b * CON_b * (2.0 * Clp(m_state.m_mach) * m_state.m_omega.x + (1.5 * -Clr(m_state.m_mach)) * m_state.m_omega.y);
 }
 
@@ -214,7 +258,7 @@ void FlightModel::M_stab()
 	// "+ m_CmqStAG" eingefügt
 
 	//----------------NEUE Version mit Ausschlagsbeschränkung auf max Ausschlag Backstick-------------------------------------------------------------------------------------------------
-	m_moment.z += m_k * CON_mac * (1.35 * (CmalphaNEW(m_state.m_mach) * m_state.m_aoa) + (-CmdeNEW(m_state.m_mach)) * ((((m_input.getPitch() * CON_hstdUP) + m_pitchup) + m_input.getTrimmUp() - m_input.getTrimmDown() + m_airframe.getAutoPilotAltH()) * m_hStabDamage))
+	m_moment.z += m_k * CON_mac * (1.35 * (CmalphaNEW(m_state.m_mach) * m_state.m_aoa) + (-CmdeNEW(m_state.m_mach)) * ((((m_input.getPitch() * m_elevDeflection) + m_pitchup) + m_input.getTrimmUp() - m_input.getTrimmDown() + m_airframe.getAutoPilotAltH()) * m_hStabDamage))
 		+ 0.25 * m_state.m_airDensity * m_scalarVelocity * CON_A * CON_mac * CON_mac * ((1.75 * Cmq(m_state.m_mach) + m_CmqStAg) * m_state.m_omega.z + ((1.95 * CmadotNEW(m_state.m_mach)) + m_CmaDOTStAg ) * m_aoaDot );
 
 }
@@ -251,7 +295,7 @@ void FlightModel::lift()
 	//m_force.y += m_k * (((CLa(m_state.m_mach) * m_state.m_aoa) + ((CLFlaps + CLblc) * m_flapDamage)) * ((m_lWingDamageCL + m_rWingDamageCL) / 2.0 ) ); //+ CLds(m_state.m_mach)); //aktuell nur Lift due to AoA ohne Stab-Lift 
 	
 	//------------------neue Lift-Formel mit dynamischem Flap-Lift---------------------------------------------------
-	m_force.y += m_k * (((CLa(m_state.m_mach) * m_state.m_aoa) + ((CLFlaps + CLblc) * m_flapDamage)) * ((m_lWingDamageCL + m_rWingDamageCL) / 2.0));
+	m_force.y += m_k * ((((CLa(m_state.m_mach) * m_state.m_aoa) + ((0.65 * CLds(m_state.m_mach)) * m_elevDeflection) + ((CLFlaps + CLblc) * m_flapDamage)) * ((m_lWingDamageCL + m_rWingDamageCL) / 2.0)) * m_zeroLift);
 }
 
 void FlightModel::drag()
@@ -262,7 +306,8 @@ void FlightModel::drag()
 	//erster Versuch: m_force.x = -(m_k * (CDmach(m_state.m_mach) + CDa(m_state.m_aoa)
 		//+ ((CLmach(m_state.m_mach) + CLa(m_state.m_mach)) * (CLmach(m_state.m_mach) + CLa(m_state.m_mach))) / CON_pi * CON_AR * CON_e));
 	// statt 0.85 jetzt 0.80 * CDa(etc) um Alpha-Drag anzupassen.
-	m_force.x += -m_k * ((CDmin(m_state.m_mach)) + (0.80 * (CDa(m_state.m_mach) * m_state.m_aoa)) + (CDeng(m_state.m_mach)) + CDGear + CDFlaps + CDBrk + CDBrkCht + CD_OverMach + m_cdminADD + CD_brFlap); // +CDwave + CDi); CDwave und CDi wieder dazu, wenn DRAG geklärt.
+	//jetzt wieder 1.0 vor CDa, da aufgrund der Rotation der Drag anders "angreift"
+	m_force.x += -m_k * ((CDmin(m_state.m_mach)) + (1.00 * (CDa(m_state.m_mach) * m_state.m_aoa)) + (CDeng(m_state.m_mach)) + CDGear + CDFlaps + CDBrk + CDBrkCht + CD_OverMach + m_cdminADD + CD_brFlap + m_stallIndDrag); // +CDwave + CDi); CDwave und CDi wieder dazu, wenn DRAG geklärt.
 }
 
 void FlightModel::sideForce()
@@ -270,7 +315,7 @@ void FlightModel::sideForce()
 	//set side force
 	//m_force.z
 	//vor m_input.getYaw() ein "-" eingefügt, da eigentlich "-"Yaw richtig-herum ist.
-	m_force.z += m_k * ((Cydr(m_state.m_mach) * m_input.getYaw()) + (Cyb(m_state.m_mach) * m_state.m_beta)); //neu eingefügt 28Mar21
+	m_force.z += m_k * ((Cydr(m_state.m_mach) * (m_input.getYaw() * m_rudDeflection)) + (Cyb(m_state.m_mach) * m_state.m_beta)); //neu eingefügt 28Mar21
 }
 
 void FlightModel::thrustForce()
@@ -285,7 +330,7 @@ void FlightModel::thrustForce()
 
 void FlightModel::calcAeroDeflection()
 {
-	if (m_airframe.getGearNPosition() > 0.1)
+	if (m_airframe.getGearNPosition() > 0.0)
 	{
 		m_ailDeflection = 2 * CON_aitgu;
 	}
@@ -294,13 +339,22 @@ void FlightModel::calcAeroDeflection()
 		m_ailDeflection = 2 * CON_aitnu;
 	}
 
-	if (m_airframe.getGearNPosition() > 0.1)
+	if (m_airframe.getGearNPosition() > 0.0)
 	{
 		m_rudDeflection = CON_RdDefGDR;
 	}
 	if (m_airframe.getGearNPosition() == 0.0)
 	{
 		m_rudDeflection = CON_RdDefGUR;
+	}
+
+	if (m_input.getPitch() >= 0.0)
+	{
+		m_elevDeflection = m_input.getPitch() * CON_hstdUP;
+	}
+	if (m_input.getPitch() < 0.0)
+	{
+		m_elevDeflection = m_input.getPitch() * CON_hstdDN;
 	}
 
 }
@@ -334,16 +388,56 @@ void FlightModel::pitchStabAugSystem()
 	}
 }
 
+void FlightModel::calcZeroLift()
+{
+	m_setLiftZero = CLzero(m_state.m_mach);
+
+	if (m_state.m_aoa >= m_setLiftZero)
+	{
+		m_zeroLift = 0.01;
+	}
+	else
+	{
+		m_zeroLift = 1.0;
+	}
+
+	if ((m_state.m_aoa >= m_setLiftZero) && (m_state.m_angle.x >= 0.0) && ((m_state.m_aoa > 0.273) && (m_state.m_aoa < 1.65)))
+	{
+		m_stallIndRoll = 0.95;
+	}
+	else if ((m_state.m_aoa >= m_setLiftZero) && (m_state.m_angle.x < 0.0) && ((m_state.m_aoa > 0.273) && (m_state.m_aoa < 1.65)))
+	{
+		m_stallIndRoll = -0.95;
+	}
+	else
+	{
+		m_stallIndRoll = 0.0;
+	}
+
+	if (m_state.m_aoa > m_setLiftZero)
+	{
+		m_stallIndDrag = (CDa(m_state.m_mach) * m_state.m_aoa) * 1.5;
+	}
+	else
+	{
+		m_stallIndDrag = 0.0;
+	}
+}
+
 void FlightModel::addedDrag()
 {
-	if ((m_state.m_mach >= 0.0664) && (m_state.m_mach <= 1.4680))
+	//-----------auskommentiert, da Versuch mit CDmin_FullNEU und TSFC-Thrust-----------------
+	/*if ((m_state.m_mach >= 0.0664) && (m_state.m_mach <= 1.4680))
 	{
 		m_cdminADD = CDminAD(m_state.m_mach);
 	}
 	else
 	{
 		m_cdminADD = 0.0;
-	}
+	}*/
+	
+	m_cdminADD = 0.0;
+
 }
 
 void FlightModel::brokenFlapDrag()
@@ -369,6 +463,7 @@ void FlightModel::update(double dt)
 {
 	m_moment = Vec3();
 	m_force = Vec3();
+
 
 	m_aoaDot = (m_state.m_aoa - m_aoaPrevious) / dt;
 	m_aoaPrevious = m_state.m_aoa;
@@ -411,8 +506,15 @@ void FlightModel::update(double dt)
 	pitchStabAugSystem();
 	addedDrag();
 	brokenFlapDrag();
+	calcZeroLift();
 
-	printf("CD broken Flap %f \n", CD_brFlap);
+	//printf("boddy_force_X %f \n", m_force_boddy.x);
+	//printf("boddy_force_Y %f \n", m_force_boddy.y);
+	//printf("boddy_force_Z %f \n", m_force_boddy.z);
+
+
+	// printf("CD broken Flap %f \n", CD_brFlap);
+
 	//printf("CL Total %f \n", m_force.y);
 	//----------------function for Pitchup-Factor, Pitchup-force and pitchup-speed--------------------
 	if ((m_state.m_aoa >= 0.2617) && (m_airframe.getFlapsPosition() == 0.0) && (m_state.m_mach > 0.26))
@@ -535,6 +637,13 @@ void FlightModel::update(double dt)
 	printf("TurbineIntegrity %f \n", m_airframe.getTurbineDamage());
 	printf("CompressorIntegrity %f \n", m_airframe.getCompressorDamage());*/
 	//printf("Roll %f \n", m_input.m_roll);
+
+	//das muss hier hinten hin, damit m_force durch das update der Lift und Drag-Funktionen gefüllt ist. Sonnst ist m_force = 0.0
+	m_force_boddy = windAxisToBodyAxis(m_force, m_state.m_aoa, m_state.m_beta);
+
+	//printf("boddy_force_X %f \n", m_force_boddy.x);
+	//printf("boddy_force_Y %f \n", m_force_boddy.y);
+	//printf("boddy_force_Z %f \n", m_force_boddy.z);
 }
 
 void FlightModel::calculateShake(double& dt)

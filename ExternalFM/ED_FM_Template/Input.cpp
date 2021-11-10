@@ -27,7 +27,19 @@ void Input::inputUpdate(double dt)
 
 	resetCrossHairs();
 
-	
+	ThrottleKeysValue();
+	throttleUpGO();
+	throttleDownGO();
+	throttleSTOP();
+
+	throttleDecision();
+
+	qnhDOWN();
+	qnhUP();
+	qnhSTOP();
+	qnhValue();
+
+
 }
 
 void Input::setKeyPitch()
@@ -192,4 +204,140 @@ void Input::resetCrossHairs()
 	}
 
 
+}
+
+void const Input::throttleUpGO()
+{
+	if (m_throttleUP == 0.0)
+	{
+		m_throttleUP = 1.0;
+	
+	}
+	if (m_throttleUP == 1.0)
+	{
+		m_throttlePLUS += 0.05;
+	}
+}
+
+void const Input::throttleDownGO()
+{
+	if (m_throttleDOWN == 0.0)
+	{
+		m_throttleDOWN = 1.0;
+	}
+	if (m_throttleDOWN == 1.0)
+	{
+		m_throttleMINUS += 0.05;
+	}
+}
+
+void const Input::throttleSTOP()
+{
+	if (m_throttleSTOP == 0.0)
+	{
+		m_throttleSTOP = 1.0;
+		m_throttleDOWN = 0.0;
+		m_throttleUP = 0.0;
+	}
+	if (m_throttleSTOP == 1.0)
+	{
+		m_throttleSTOP = 0.0;
+	}
+}
+
+void const Input::ThrottleKeysValue()
+{
+	if (m_throttleKeysValue >= -1.0)
+	{
+		m_throttleKeysValue = m_throttlePLUS - m_throttleMINUS;
+	}
+	else
+	{
+		m_throttleKeysValue = -1.0;
+	}
+
+	m_deltaKeysThrottle = m_throttlePLUS - m_throttleMINUS;
+
+	if (m_deltaKeysThrottle > 1.0)
+	{
+		m_throttlePLUS = 2.0;
+		m_throttleMINUS = 1.0;
+	}
+	else if (m_deltaKeysThrottle < -1.0)
+	{
+		m_throttlePLUS = 1.0;
+		m_throttleMINUS = 2.0;
+	}
+
+
+}
+
+void const Input::throttleDecision()
+{
+	if ((m_throttle == -1.0) && (m_throttleKeysValue > -1.0))
+	{
+		m_finalThrottle = m_throttleKeysValue;
+	}
+	else if (m_throttle > -1.0)
+	{
+		m_finalThrottle = m_throttle;
+	}
+}
+
+void const Input::qnhUP()
+{
+	if (m_qnhUP == 0.0)
+	{
+		m_qnhUP = 1.0;
+	}
+	else if (m_qnhUP == 1.0)
+	{
+		m_qnhPlus += 15.0;
+	}
+}
+
+void const Input::qnhDOWN()
+{
+	if (m_qnhDOWN == 0.0)
+	{
+		m_qnhDOWN = 1.0;
+	}
+	else if (m_qnhDOWN == 1.0)
+	{
+		m_qnhMinus += 15.0;
+	}
+}
+
+void const Input::qnhSTOP()
+{
+	if (m_qnhSTOP == 0.0)
+	{
+		m_qnhSTOP = 1.0;
+		m_qnhUP = 0.0;
+		m_qnhDOWN = 0.0;
+	}
+	else if (m_qnhSTOP == 1.0)
+	{
+		m_qnhSTOP = 0.0;
+	}
+}
+
+void const Input::qnhValue()
+{
+	if ((m_retQNH >= 95000.0) && (m_retQNH <= 105000.0))
+	{
+		m_retQNH = 101320.0 + (m_qnhPlus - m_qnhMinus); //zum testen statt 101325.0
+	}
+	else if (m_retQNH < 95000.0)
+	{
+		m_retQNH = 95000.0;
+		m_qnhPlus = 0.0;
+		m_qnhMinus = 6325.0;
+	}
+	else if (m_retQNH > 105000.0)
+	{
+		m_retQNH = 105000.0;
+		m_qnhPlus = 3675.0;
+		m_qnhMinus = 0.0;
+	}
 }

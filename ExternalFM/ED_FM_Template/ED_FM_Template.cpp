@@ -540,6 +540,17 @@ void ed_fm_set_command(int command,
 			s_input->m_light_toggle = 0.0;
 		}*/
 		break;
+
+	case COMMAND_THROTTLE_UP_GO:
+		s_input->throttleUpGO();
+		break;
+	case COMMAND_THROTTLE_STOP:
+		s_input->throttleSTOP();
+		break;
+	case COMMAND_THROTTLE_DOWN_GO:
+		s_input->throttleDownGO();
+		break;
+
 	case COMMAND_ELEV_UP_GO:
 		s_input->elevUpGO();
 		/*if (s_input->m_elev_up_go == 0.0)
@@ -734,6 +745,15 @@ void ed_fm_set_command(int command,
 		break;
 	case COMMAND_MASTER_GUN:
 		s_input->masterGUN();
+		break;
+	case COMMAND_QNH_UP:
+		s_input->qnhUP();
+		break;
+	case COMMAND_QNH_DOWN:
+		s_input->qnhDOWN();
+		break;
+	case COMMAND_QNH_STOP:
+		s_input->qnhSTOP();
 		break;
 
 
@@ -959,6 +979,10 @@ void ed_fm_set_fc3_cockpit_draw_args_v2(float* data, size_t size)
 	data[626] = s_airframe->getPylonIndLightA();
 	data[627] = s_airframe->gunIndSwitch();//gun-selector-switch 0.0; 1.0
 	data[628] = s_airframe->getGearLeverLamp();//Gear-Lever-Lamp an bei 0.0 > und < 1.0; bei 0.0 und 1.0 aus.
+	data[629] = s_airframe->getQNHinThousand();
+	data[630] = s_airframe->getQNHinHundred();
+	data[631] = s_airframe->getQNHinTen();
+	data[632] = s_airframe->getQNHinOne();
 
 }
 

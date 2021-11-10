@@ -36,6 +36,7 @@ public:
 	
 	void update(double dt);
 
+	void calculateAeroRotateMoments();
 
 	void L_stab();
 	void M_stab();
@@ -45,6 +46,8 @@ public:
 	void drag();
 	void sideForce();
 	void thrustForce();
+
+	void calcZeroLift();
 
 	void calcAeroDeflection();
 	void calcLiftFlaps();
@@ -63,14 +66,18 @@ public:
 
 	inline const Vec3& getForce() const; //inline u.U. unnötig, da die Funktion nicht direkt hier implementiert wurde; inline könnte weg
 	inline const Vec3& getMoment() const; //inline u.U. unnötig, da die Funktion nicht direkt hier implementiert wurde; inline könnte weg
+	//inline const Vec3& calculateRotation();
 
 private:
 	Vec3 m_moment;
 	Vec3 m_force;
+	//neu eingefügt für Rotation stabilitäts-Achse zu model-Achse
+	Vec3 m_force_boddy;
 	State& m_state;
 	Input& m_input;
 	Engine& m_engine; //neu 21Feb21 // wieder rausgenommen
 	Airframe& m_airframe;
+	
 
 	//--------------Aerodynamic Values--------------------------------
 	double m_scalarVelocity = 0.0;
@@ -84,6 +91,10 @@ private:
 	//--------------PitchUp and Stall--------------------------------
 	double m_pitchup = 0.0;
 	double m_stallMult = 0.0;
+	double m_zeroLift = 0.0;
+	double m_setLiftZero = 0.0;
+	double m_stallIndRoll = 0.0;
+	double m_stallIndDrag = 0.0;
 
 	//---------Pitch Stability-augmentation--------------------------
 	double m_CmqStAg = 0.0;
@@ -98,6 +109,30 @@ private:
 	double m_k = 0.0; //0.5*p*V^2 * s
 	double m_q = 0.0; //0.5*p*V^2 * s * b
 	double m_p = 0.0; //0.25*p*V * s * b^2
+	
+					  
+	//------------NEU eingefügt testweise----NEU---NEU----NEU---------------
+	//---------------Coefficients and Derivatives for calculation AERO--------
+	//---------------sufix "b" for conversion from stability axis to body axis----
+	/*double Clb_b = 0.0;
+	double Clp_b = 0.0;
+	double Clr_b = 0.0;
+	double Clda_b = 0.0;
+	double Cldr_b = 0.0;
+
+	double Cnb_b = 0.0;
+	double Cnp_b = 0.0;
+	double Cnr_b = 0.0;
+	double Cnda_b = 0.0;
+	
+	//------------------rotational formulas to rotate moments around Alpha
+	double CosAoA = 0.0;
+	double SinusAoA = 0.0;
+	double CosAoA2 = 0.0;
+	double SinAoA2 = 0.0;
+	*/
+	//------------ENDE NEU-----------ENDE NEU-----------------ENDE NEU--------
+
 
 	//-----------------Formula-Parts DRAG und LIFT----------------------------
 	double CDwave = 0.0; // a * (M/Mcrit)^b // neu 18.02.2021
@@ -118,6 +153,7 @@ private:
 	//--------------Calculate aero and calculate deflections---------
 	double m_ailDeflection = 0.0;
 	double m_rudDeflection = 0.0;
+	double m_elevDeflection = 0.0;
 						
 	//---------------damage varaiables for parts---------------------
 	double m_rWingDamageCL = 0.0;
@@ -138,6 +174,7 @@ private:
 	bool prevGearShake = false;
 	bool gearShake = false;
 	Timer m_shakeDuration;
+
 
 
 
@@ -191,11 +228,14 @@ private:
 	Table PitMult;
 	Table StAoA;
 	Table StAoAMulti;
+	Table CLzero;
 };
+
 
 const Vec3& FlightModel::getForce() const
 {
-	return m_force;
+	return m_force_boddy;
+	//return m_force;
 }
 
 const Vec3& FlightModel::getMoment() const

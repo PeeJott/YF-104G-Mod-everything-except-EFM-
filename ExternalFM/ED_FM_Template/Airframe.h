@@ -176,6 +176,13 @@ public:
 
 	inline double getEASinKnots();
 
+	//----------QNH Einstellung im Altimeter----------
+
+	double getQNHinThousand();
+	double getQNHinHundred();
+	double getQNHinTen();
+	double getQNHinOne();
+
 	//-----------Crosshair Test Functions-------------
 	void crossHairHori();
 	void crossHairVerti();
@@ -554,6 +561,14 @@ private:
 	double m_retAltIndTK = 0.0;
 	double m_retAltIndK = 0.0;
 
+	//-------neu wegen QNH-----------------------------------------
+	int m_qnhVar = 0;
+	double m_indQnhThousand = 0.0;
+	double m_indQnhHundred = 0.0;
+	double m_retIndQnhHundred = 0.0;
+	double m_indQnhTen = 0.0;
+	double m_indQnhOne = 0.0;
+
 	//------------CrossHair Movement--------------------------------
 	double m_crossHairHori = 0.0;
 	double m_crossHairVerti = 0.0;
@@ -802,7 +817,7 @@ double Airframe::getGearFLamp()
 
 double Airframe::getGearLeverLamp()
 {
-	return m_gearRPosition;
+	return m_gearNPosition;
 }
 
 

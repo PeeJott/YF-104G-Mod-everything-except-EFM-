@@ -87,6 +87,14 @@ enum Command
 	COMMAND_MASTER_GUN = 113,
 	COMMAND_MASTER_NAVI = 105,
 
+	COMMAND_THROTTLE_UP_GO = 1032,
+	COMMAND_THROTTLE_STOP = 1034,
+	COMMAND_THROTTLE_DOWN_GO = 1033,
+
+	COMMAND_QNH_UP = 316,
+	COMMAND_QNH_DOWN = 317,
+	COMMAND_QNH_STOP = 318,
+
 
 
 	//--------------------------------------
@@ -174,6 +182,24 @@ class Input
 			m_masterGUN = 0.0;
 			m_masterNavi = 0.0;
 
+			m_throttleUP = 0.0;
+			m_throttleDOWN = 0.0;
+			m_throttleSTOP = 0.0;
+
+			m_throttlePLUS = -1.0;
+			m_throttleMINUS = 0.0;
+			m_throttleKeysValue = -1.0;
+			m_deltaKeysThrottle = 0.0;
+
+			m_finalThrottle = 0.0;
+
+			m_qnhUP = 0.0;
+			m_qnhDOWN = 0.0;
+			m_qnhPlus = 0.0;
+			m_qnhMinus = 0.0;
+			m_qnhSTOP = 0.0;
+			m_retQNH = 101320.0;//statt 101325.0
+
 
 		}
 
@@ -227,9 +253,11 @@ class Input
 			//return m_throttle;
 		}
 
+		const void throttleDecision();
+
 		inline const double getThrottle()
 		{
-			return m_throttle;
+			return m_finalThrottle;
 		}
 
 		inline const void yaw(double value)
@@ -262,6 +290,14 @@ class Input
 		{
 			return m_brakeLeftWheel;
 		}
+
+		void const throttleUpGO();
+
+		void const throttleDownGO();
+
+		void const throttleSTOP();
+
+		void const ThrottleKeysValue();
 
 		inline const void trimmUP()
 		{
@@ -794,8 +830,19 @@ class Input
 			return m_masterNavi;
 		}
 
+//----------QNH Einstellung am Altimeter------------
+		void const qnhUP();
+		void const qnhDOWN();
+		void const qnhSTOP();
+		void const qnhValue();
+
+		inline const double getQnhValue()
+		{
+			return m_retQNH;
+		}
 
 
+		
 
 
 //----------Crosshair-Test-Functions-------------
@@ -1227,5 +1274,22 @@ class Input
 	double m_masterAtoG = 0.0;
 	double m_masterGUN = 0.0;
 	double m_masterNavi = 0.0;
+
+	double m_throttleUP = 0.0;
+	double m_throttleDOWN = 0.0;
+	double m_throttleSTOP = 0.0;
+	double m_throttlePLUS = 0.0;
+	double m_throttleMINUS = 0.0;
+	double m_throttleKeysValue = 0.0;
+	double m_deltaKeysThrottle = 0.0;
+
+	double m_finalThrottle = 0.0;
+
+	double m_qnhUP = 0.0;
+	double m_qnhDOWN = 0.0;
+	double m_qnhSTOP = 0.0;
+	double m_retQNH = 0.0;
+	double m_qnhPlus = 0.0;
+	double m_qnhMinus = 0.0;
 };
 
