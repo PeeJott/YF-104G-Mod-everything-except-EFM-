@@ -659,9 +659,9 @@ void Airframe::airframeUpdate(double dt)
 	//printf("Flp-Up-Value %f \n", m_input.m_flapsup);
 	//printf("YAW_Value %f \n", m_input.m_flapstgl);
 	//printf("Flp-Tgl-Value %f \n", m_input.m_flapstgl);
-	printf("PylonIndicatorValueG %f \n", m_pylonIndLightG);
-	printf("PylonIndicatorValueA %f \n", m_pylonIndLightA);
-	printf("GunSwitchValue %f \n", m_gunSwitch);
+	//printf("PylonIndicatorValueG %f \n", m_pylonIndLightG);
+	//printf("PylonIndicatorValueA %f \n", m_pylonIndLightA);
+	//printf("GunSwitchValue %f \n", m_gunSwitch);
 	
 	//---------Engine flame-out function------------------
 
@@ -776,8 +776,8 @@ void Airframe::airframeUpdate(double dt)
 	//printf("Flap-Overspeed %f \n", m_flapOSind);
 	//printf("GearPosition %f \n", m_gearNPosition);
 
-	printf("QNH_Value %f \n", m_input.getQnhValue());
-	printf("QNH_Variable %f \n", m_qnhVar);
+	//printf("QNH_Value %f \n", m_input.getQnhValue());
+	//printf("QNH_Variable %f \n", m_qnhVar);
 }
 
 //-------------Neu eingefügt für multiplikator AERO-Surfaces--------------

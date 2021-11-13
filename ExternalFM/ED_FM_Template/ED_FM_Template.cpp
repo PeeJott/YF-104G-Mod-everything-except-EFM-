@@ -979,10 +979,12 @@ void ed_fm_set_fc3_cockpit_draw_args_v2(float* data, size_t size)
 	data[626] = s_airframe->getPylonIndLightA();
 	data[627] = s_airframe->gunIndSwitch();//gun-selector-switch 0.0; 1.0
 	data[628] = s_airframe->getGearLeverLamp();//Gear-Lever-Lamp an bei 0.0 > und < 1.0; bei 0.0 und 1.0 aus.
-	data[629] = s_airframe->getQNHinThousand();
-	data[630] = s_airframe->getQNHinHundred();
-	data[631] = s_airframe->getQNHinTen();
-	data[632] = s_airframe->getQNHinOne();
+	data[629] = s_airframe->getQNHinThousand();//QNH-Anzeige tausender Bereich
+	data[630] = s_airframe->getQNHinHundred();//QNH-Anzeige hunderter Bereich
+	data[631] = s_airframe->getQNHinTen();//QNH-Anzeige zehner Bereich
+	data[632] = s_airframe->getQNHinOne();//QNH-Anzeige einer Bereich
+	data[633] = s_fuelsystem->getAdjFuelQtyInternal();//neue interne Fuel Anzeige.
+	data[634] = s_airframe->getNozzlePosition();//für die Nozzle-Pos-Anzeige die Werte der externen Nozzle-Position, 0.4, 0.2, 0.8
 
 }
 

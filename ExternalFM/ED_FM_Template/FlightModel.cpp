@@ -240,7 +240,7 @@ void FlightModel::L_stab()
 	*/
 
 	//-------------------------NEUE Versíon MIT Beschränkung des Max-Ausschalgs--------------------------------------------------------
-	m_moment.x += m_q * (Clb(m_state.m_mach) * m_state.m_beta + Clda(m_state.m_mach) * (((m_input.getRoll() * m_ailDeflection) + m_input.getTrimmAilR() - m_input.getTrimmAilL()) * m_ailDamage + m_stallIndRoll) + (m_lWingDamageCD + m_rWingDamageCD) + (0.55 * Cldr(m_state.m_mach)) * (m_input.getYaw() * m_rudDeflection))
+	m_moment.x += m_q * (Clb(m_state.m_mach) * m_state.m_beta + Clda(m_state.m_mach) * (((m_input.getRoll() * m_ailDeflection) + m_input.getTrimmAilR() - m_input.getTrimmAilL()) * m_ailDamage) + (m_lWingDamageCD + m_rWingDamageCD) + (0.55 * Cldr(m_state.m_mach)) * (m_input.getYaw() * m_rudDeflection) + m_stallIndRoll)
 		+ 0.25 * m_state.m_airDensity * m_scalarVelocity * CON_A * CON_b * CON_b * (2.0 * Clp(m_state.m_mach) * m_state.m_omega.x + (1.5 * -Clr(m_state.m_mach)) * m_state.m_omega.y);
 }
 
@@ -401,13 +401,13 @@ void FlightModel::calcZeroLift()
 		m_zeroLift = 1.0;
 	}
 
-	if ((m_state.m_aoa >= m_setLiftZero) && (m_state.m_angle.x >= 0.0) && ((m_state.m_aoa > 0.273) && (m_state.m_aoa < 1.65)))
+	if ((m_state.m_aoa >= m_setLiftZero) && (m_state.m_angle.x >= 0.0) && ((m_state.m_aoa > 0.42) && (m_state.m_aoa < 1.745))) //
 	{
-		m_stallIndRoll = 0.95;
+		m_stallIndRoll = 0.25;//0.25 jetzt mit weniger, weil ich den m_stallIndRoll vor die Klammer gezogen habe und er jetzt nicht mit kleiner 1 multipliziert wird.
 	}
-	else if ((m_state.m_aoa >= m_setLiftZero) && (m_state.m_angle.x < 0.0) && ((m_state.m_aoa > 0.273) && (m_state.m_aoa < 1.65)))
+	else if ((m_state.m_aoa >= m_setLiftZero) && (m_state.m_angle.x < 0.0) && ((m_state.m_aoa > 0.42) && (m_state.m_aoa < 1.745))) //
 	{
-		m_stallIndRoll = -0.95;
+		m_stallIndRoll = -0.25;//-0.25
 	}
 	else
 	{
@@ -535,11 +535,11 @@ void FlightModel::update(double dt)
 	//-------------function for Stall-AoA and Stall-Speed and resulting stall-force----------------------------------------------
 	if ((m_state.m_aoa >= 0.2533) && (m_airframe.getFlapsPosition() == 0.0))
 	{
-		m_stallMult = 2.15 * (StAoA(m_state.m_aoa) * StAoAMulti(m_state.m_mach));//von 1.75 zu 2.25 zu 1.95 zu 1.45 zu 2.01 zu 1.85 zu 2.05 zu 2.15//neuer Multiplikator
+		m_stallMult = 1.65 * (StAoA(m_state.m_aoa) * StAoAMulti(m_state.m_mach));//von 1.75 zu 2.25 zu 1.95 zu 1.45 zu 2.01 zu 1.85 zu 2.05 zu 2.15//neuer Multiplikator 1.65
 	}
 	else if ((m_state.m_aoa >= 0.2533) && (m_airframe.getFlapsPosition() > 0.0)) // || (m_state.m_mach <= 0.26)))
 	{
-		m_stallMult = 0.85 * (StAoA(m_state.m_aoa) * StAoAMulti(m_state.m_mach)); //von 1.25 auf 1.75 auf 1.45 zu 1.15 zu 0.95 zu 0.65//neuer Multiplikator
+		m_stallMult = 0.95 * (StAoA(m_state.m_aoa) * StAoAMulti(m_state.m_mach)); //von 1.25 auf 1.75 auf 1.45 zu 1.15 zu 0.95 zu 0.65//neuer Multiplikator 0.95
 	}
 	else
 	{
