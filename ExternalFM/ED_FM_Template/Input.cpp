@@ -44,45 +44,63 @@ void Input::inputUpdate(double dt)
 
 void Input::setKeyPitch()
 {
-	if (m_elev_up_go == 1.0)
+	if ((m_elev_up_go > 0.0) || (m_elev_down_go > 0.0))
 	{
-		if (m_elev_up_stop == 1.0)
+		if (m_elev_up_go == 1.0)
 		{
-			m_elev_up_go = 0.0;
-			m_elev_up_stop = 0.0;
-			m_pitch = 0.0;
+			if (m_elev_up_stop == 1.0)
+			{
+				m_elev_up_go = 0.0;
+				m_elev_up_stop = 0.0;
+				//m_pitch = 0.0; alte Variante
+				//m_pitch = (m_elevUP / 400.0);
+				//m_pitch = ((-m_elevDOWN / 400) + (m_elevUP / 400));
+			}
 		}
-	}
-	if (m_elev_up_go == 1.0)
-	{
-		m_elevUP++;
-		m_pitch = (m_elevUP / 400.0);
-		m_elevDOWN = 0.0;
-	}
-	else
-	{
-		m_elevUP = 0.0;
+		if (m_elev_up_go == 1.0)
+		{
+			m_elevUP++;
+			//m_pitch = (m_elevUP / 400.0);
+			//m_elevDOWN = 0.0;
+			//m_pitch = ((-m_elevDOWN / 400) + (m_elevUP / 400));
+		}
+		/*else
+		{
+			m_elevUP = 0.0;
+		}*/
+
+		if (m_elev_down_go == 1.0)
+		{
+			if (m_elev_down_stop == 1.0)
+			{
+				m_elev_down_go = 0.0;
+				m_elev_down_stop = 0.0;
+				//m_pitch = 0.0; alte Variante
+				//m_pitch = (-m_elevDOWN / 400);
+				//m_pitch = ((-m_elevDOWN / 400) + (m_elevUP / 400));
+			}
+		}
+
+		if (m_elev_down_go == 1.0)
+		{
+			m_elevDOWN++;
+			//m_pitch = (-m_elevDOWN / 400); alte variante
+			//m_pitch = ((-m_elevDOWN / 400) + (m_elevUP / 400));
+			//m_elevUP = 0.0;
+		}
+		/*else
+		{
+			m_elevDOWN = 0.0;
+		}*/
+
+		m_pitch = ((-m_elevDOWN / 400) + (m_elevUP / 400));
+
 	}
 
-	if (m_elev_down_go == 1.0)
-	{
-		if (m_elev_down_stop == 1.0)
-		{
-			m_elev_down_go = 0.0;
-			m_elev_down_stop = 0.0;
-			m_pitch = 0.0;
-		}
-	}
-
-	if (m_elev_down_go == 1.0)
-	{
-		m_elevDOWN++;
-		m_pitch = (-m_elevDOWN / 400);
-		m_elevUP = 0.0;
-	}
-	else
+	if (m_elevDOWN == m_elevUP)
 	{
 		m_elevDOWN = 0.0;
+		m_elevUP = 0.0;
 	}
 }
 

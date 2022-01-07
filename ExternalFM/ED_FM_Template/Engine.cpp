@@ -162,15 +162,18 @@ void Engine::update(double dt)
 	}*/
 
 	//------------NEW corrected Air Density with a lot of steps through lookup----------
-
-	if (m_state.m_airDensity <= 0.88)
+	//-------------OLD Version---------------------------------------------------------
+	/*if (m_state.m_airDensity <= 0.88)
 	{
 		m_corrAirDensity = CADen(m_state.m_airDensity);
 	}
 	else
 	{
 		m_corrAirDensity = 0.0;
-	}
+	}*/
+	//-----------------NEW Version mit CAD bis SL---------------------------------------
+	m_corrAirDensity = CADen(m_state.m_airDensity);
+
 //--------------END of corrected airdensity----------------------------------------------
 //--------------Start of Engine starting up and spooling down//Noch drüber nachdenken----------------------------	
 	

@@ -756,6 +756,9 @@ void ed_fm_set_command(int command,
 		s_input->qnhSTOP();
 		break;
 
+	case COMMAND_INST_LIGHT_TGL:
+		s_input->instLightTgl();
+		break;
 
 	default:
 		printf("number %d: %llf\n", command, value); //neu eingefügt um "unbekannte" Kommandos zur Konsole auszugeben
@@ -847,6 +850,15 @@ void   ed_fm_set_internal_fuel(double fuel)
 /*
 	get internal fuel volume 
 */
+
+//---------------NEU EINGEFÜGT---------------------
+void ed_fm_refueling_add_fuel(double fuel)
+{
+		//printf("Add fuel: %lf\n", fuel);
+		s_fuelsystem->addFuel(fuel);
+}
+//-----------------NEU EINGEFÜGT ENDE----------------
+
 double ed_fm_get_internal_fuel()
 {
 	//return 1.0;
@@ -934,18 +946,21 @@ void ed_fm_set_draw_args (EdDrawArgument * drawargs,size_t size)
 	drawargs[36].f = s_airframe->getChutePositionY();//slew chute in Y-Axis (-1 to +1)
 	drawargs[37].f = s_airframe->getChutePositionZ();//slew chute in Z-Axis (-1 to +1)
 
+	//--------this is Refueling-Probe argument---------
+	drawargs[22].f = 1.0;
+
 }
 
 void ed_fm_set_fc3_cockpit_draw_args_v2(float* data, size_t size)
 {
-	data[39] = s_airframe->getGearLLamp();//Fahrwerkslampe linkes Fahrwerk
-	data[40] = s_airframe->getGearFLamp();//Fahrwerkslampe Bugrad
-	data[41] = s_airframe->getGearRLamp();//Fahrwerkslampe rechtes Fahrwerk
-	data[42] = s_airframe->getFlapIndLEPos();//FlapPosition-Indicator LE-Flaps
-	data[43] = s_airframe->getFlapIndTEPos();//FlapPosition-Indicator TE-Flaps
+	data[635] = s_airframe->getGearLLamp();//39 zu 635 Fahrwerkslampe linkes Fahrwerk
+	data[636] = s_airframe->getGearFLamp();//40 zu 636Fahrwerkslampe Bugrad
+	data[637] = s_airframe->getGearRLamp();//41 zu 637Fahrwerkslampe rechtes Fahrwerk
+	data[638] = s_airframe->getFlapIndLEPos();//42 zu 638 FlapPosition-Indicator LE-Flaps
+	data[639] = s_airframe->getFlapIndTEPos();//43 zu 639 FlapPosition-Indicator TE-Flaps
 	data[600] = s_airframe->getFlapLevPos();//FlapLever-Position
 
-	data[531] = s_airframe->fuelFlowIndGaugeUpdate();//FuelFlow-Indicator
+	data[641] = s_airframe->fuelFlowIndGaugeUpdate();//531 zu 641 FuelFlow-Indicator
 
 	data[602] = s_engine->overHeatInd();//OverHeat-Warning-Light 0.0/0.5/0.75 == off/yellow/red
 	data[601] = s_engine->overSpeedInd();//OverSpeed Warning indicator
@@ -955,11 +970,11 @@ void ed_fm_set_fc3_cockpit_draw_args_v2(float* data, size_t size)
 	//data[607] = s_fuelsystem->getFuelQtyTotal();//Fuel-Indicator for total Fuel
 	data[608] = s_fuelsystem->getAdjFuelQtyExternal();//Fuel-Indicator for External Fuel only
 	data[609] = s_airframe->brkChuteInd();//Chute-Position_Indicator 0.0 = aus 1.0 = Chute released
-	data[226] = s_airframe->getHookInd(); //Hook-Position Indicator 1.0 = ausgefahren 0.0 = eingefahren
-	data[225] = s_fuelsystem->bingoFuelWarning();//BingoFuel Indicator 1.0 = an/rot 0.0 = aus
-	data[200] = s_airframe->getSpeedBrakeInd();//SpdBrk-Position-Indicator 1.0 = an 0.0 = aus
-	data[221] = s_airframe->ailDamageIndicator();//Damage-Indicator for aileron Damage 1.0 = an; 0.0=aus
-	data[209] = s_airframe->stabDamageIndicator();//Damage-Indicator for horizontal stabilizer 1.0=an; 0.0=aus
+	data[646] = s_airframe->getHookInd(); //226 zu 646 Hook-Position Indicator 1.0 = ausgefahren 0.0 = eingefahren
+	data[644] = s_fuelsystem->bingoFuelWarning();//225 zu 644 BingoFuel Indicator 1.0 = an/rot 0.0 = aus
+	data[642] = s_airframe->getSpeedBrakeInd();//200 zu 642SpdBrk-Position-Indicator 1.0 = an 0.0 = aus
+	data[643] = s_airframe->ailDamageIndicator();//221 zu 643 Damage-Indicator for aileron Damage 1.0 = an; 0.0=aus
+	data[645] = s_airframe->stabDamageIndicator();//209 zu 645 Damage-Indicator for horizontal stabilizer 1.0=an; 0.0=aus
 	data[610] = s_airframe->airSpeedInKnotsEASInd();// Airspeedindicator in Knots 0.0 = 0; 1.0 = 1.000
 	data[611] = s_airframe->airSpeedInMachInd();//Airspeedindicator in Mach 0.0 = 0; 1.0 = Mach 10
 	data[616] = s_airframe->getCrossHairHori();//CrossHair horizontal movement
@@ -985,6 +1000,9 @@ void ed_fm_set_fc3_cockpit_draw_args_v2(float* data, size_t size)
 	data[632] = s_airframe->getQNHinOne();//QNH-Anzeige einer Bereich
 	data[633] = s_fuelsystem->getAdjFuelQtyInternal();//neue interne Fuel Anzeige.
 	data[634] = s_airframe->getNozzlePosition();//für die Nozzle-Pos-Anzeige die Werte der externen Nozzle-Position, 0.4, 0.2, 0.8
+	data[640] = s_airframe->getInstLight();//Instrument Light toggle 1.0 = on 0.0 = off
+	data[647] = s_airframe->getHorizonPitch(); //Values for 3d-horizon on Pitch-Axis (+/-180°) -1.0 - 0.0 - +1.0
+	data[648] = s_airframe->getHorizonRoll(); // Values for 3d-Horizon on Roll-Axis (+/- 180) -1.0 - 0.0 - +1.0
 
 }
 
@@ -1074,6 +1092,9 @@ case ED_FM_FUEL_FUEL_TANK_GROUP_0_LEFT:
 case ED_FM_FUEL_FUEL_TANK_GROUP_0_RIGHT:
 	return s_fuelsystem->getFuelQtyExternalRight();
 
+case ED_FM_CAN_ACCEPT_FUEL_FROM_TANKER:
+	return 1.0;
+
 case ED_FM_FC3_STICK_PITCH:
 	return s_input->getPitch();
 case ED_FM_FC3_STICK_ROLL:
@@ -1088,6 +1109,11 @@ case ED_FM_FC3_THROTTLE_RIGHT:
 
 case ED_FM_FC3_GEAR_HANDLE_POS:
 	return s_input->getGearToggle();
+
+//-------------Neu eingefügt zum Testen von AtoA refueling----------------
+case ED_FM_FC3_AR_DOOR_PROBE_HANDLE_POS:
+	return 1.0;
+//-------------------------------------------------------------------------
 
 case ED_FM_STICK_FORCE_CENTRAL_PITCH:
 	return 0.0;
@@ -1183,6 +1209,20 @@ bool ed_fm_need_to_be_repaired()
 double ed_fm_get_shake_amplitude()
 {
 	return s_flightModel->getCockpitShake();
+}
+
+//ed_fm_suspension_feedback eingefügt für WeightOnWheels und Lösung des AoA am Boden Problems
+
+void ed_fm_suspension_feedback(int idx, const ed_fm_suspension_info* info)
+{
+	if (idx == 0)
+	{
+		s_airframe->setWeightOnWheels(info->struct_compression);
+	}
+
+	//-----possible info about structs---------------------------------------
+	//printf("Struct Compression %d: %lf\n", idx, info->struct_compression);
+	//printf("Integrity Factor: %lf", info->integrity_factor);
 }
 
 bool ed_fm_add_local_force_component( double & x,double &y,double &z,double & pos_x,double & pos_y,double & pos_z )

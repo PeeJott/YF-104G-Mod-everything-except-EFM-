@@ -90,6 +90,9 @@ void Airframe::resetDamage()
 
 void Airframe::zeroInit()
 {
+	//-----------WeightOnWheels-Sensor--------------
+	m_weightOnWheels = 0.0;
+	
 	//---Gear position--------
 	m_gearLPosition = 0.0;
 	m_gearRPosition = 0.0;
@@ -98,6 +101,8 @@ void Airframe::zeroInit()
 	m_gearFLamp = 0.0;
 	m_gearLLamp = 0.0;
 	m_gearRLamp = 0.0;
+
+	m_instLightOn = 0.0;
 
 	m_pylonIndLight = 0.0;
 	m_gunSwitch = 0.0;
@@ -205,6 +210,11 @@ void Airframe::zeroInit()
 	m_fuelHundred = 0.0;
 	m_fuelThousand = 0.0;
 	m_fuelDivide = 0.0;
+
+	m_horizonRollAngle = 0.0;
+	m_horizonRollValue = 0.0;
+	m_horizonPitchAngle = 0.0;
+	m_horizonPitchValue = 0.0;
 
 	/*m_elevUP = 0.0;
 	m_elevDOWN = 0.0;
@@ -661,7 +671,7 @@ void Airframe::airframeUpdate(double dt)
 	//printf("Flp-Tgl-Value %f \n", m_input.m_flapstgl);
 	//printf("PylonIndicatorValueG %f \n", m_pylonIndLightG);
 	//printf("PylonIndicatorValueA %f \n", m_pylonIndLightA);
-	//printf("GunSwitchValue %f \n", m_gunSwitch);
+	//printf("WeightOnWheels %f\n", m_weightOnWheels);
 	
 	//---------Engine flame-out function------------------
 
@@ -736,10 +746,14 @@ void Airframe::airframeUpdate(double dt)
 	moveSightVertical();
 
 
-	
-	//printf("Input_CrossH_Left %f \n", m_input.getCrossHLeft());
-	//printf("CrossH_Hori %f \n", m_crossHairHori);
+	horizonPitchValue();
+	horizonRollValue();
 
+	
+	//printf("Horizon_Pitch_Angle %f\n", m_horizonPitchAngle);
+	//printf("Horizon_Pitch_Value %f\n", m_horizonPitchValue);
+	//printf("Horizon_Roll_Angle %f\n", m_horizonRollAngle);
+	//printf("Horizon_Roll_Value %f\n", m_horizonRollValue);
 
 
 	//printf("Input_CrossH_Down %f \n", m_input.getCrossHDown());
@@ -1710,6 +1724,7 @@ double Airframe::getAltIndTens()
 	return m_altIndTens / 10.0;
 }
 
+
 double Airframe::getQNHinThousand()
 {
 	return m_indQnhThousand;
@@ -1815,6 +1830,40 @@ void Airframe::pylonIndLights()
 		m_pylonIndLightA = 0.0;
 	}
 
+}
+
+//--------------------------3d-horizon functions--------------------------------------------
+
+void Airframe::horizonRollValue()
+{
+	if (m_input.getElectricSystem() == 1.0)
+	{
+		m_horizonRollAngle = toDegrees(m_state.m_angle.x);
+		
+		m_horizonRollValue = m_horizonRollAngle * 0.005556;
+	}
+	else
+	{
+		m_horizonRollAngle = 0.0;
+
+		m_horizonRollValue = 0.0;
+	}
+}
+
+void Airframe::horizonPitchValue()
+{
+	if (m_input.getElectricSystem() == 1.0)
+	{
+		m_horizonPitchAngle = toDegrees(m_state.m_angle.z);
+
+		m_horizonPitchValue = m_horizonPitchAngle * 0.005556;
+	}
+	else
+	{
+		m_horizonPitchAngle = 0.0;
+
+		m_horizonPitchValue = 0.0;
+	}
 }
 
 

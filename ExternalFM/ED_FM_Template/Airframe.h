@@ -78,12 +78,18 @@ public:
 
 	//intern FC3 Cockpit-Stuff
 	double getIntThrottlePosition();
+	inline double getInstLight();
 
 	//Steering
 	inline double setNoseWheelAngle(double dt);
 
 	//---Masses-----
 	inline void setMass(double angle);
+
+	//----------WeightOnWheels-Sensor------------------------
+	inline void setWeightOnWheels(double x);
+	inline double getWeightOnWheels() const;
+
 
 	//------Getting and returning positions-------------------
 	inline double getGearLPosition() const; //returns gear pos
@@ -182,6 +188,13 @@ public:
 	double getQNHinHundred();
 	double getQNHinTen();
 	double getQNHinOne();
+
+	//--------3d-Horizon functions-------------------
+
+	void horizonRollValue();
+	void horizonPitchValue();
+	inline double getHorizonRoll();
+	inline double getHorizonPitch();
 
 	//-----------Crosshair Test Functions-------------
 	void crossHairHori();
@@ -541,6 +554,9 @@ private:
 	double m_pylonIndLight = 0.0;
 	double m_gunSwitch = 0.0;
 
+	//-----------Instrument Lights--------------------------------
+	double m_instLightOn = 0.0;
+
 	//-----------FuelFlow Indicator---------------------------------
 	double m_fuelHundred = 0.0;
 	double m_fuelThousand = 0.0;
@@ -561,6 +577,9 @@ private:
 	double m_retAltIndTK = 0.0;
 	double m_retAltIndK = 0.0;
 
+	//--------------WeightOnWheels-Sensor-------------------------
+	double m_weightOnWheels = 0.0;
+
 	//-------neu wegen QNH-----------------------------------------
 	int m_qnhVar = 0;
 	double m_indQnhThousand = 0.0;
@@ -568,6 +587,13 @@ private:
 	double m_retIndQnhHundred = 0.0;
 	double m_indQnhTen = 0.0;
 	double m_indQnhOne = 0.0;
+
+	//--------neu wegen 3d-Horizont---------------------------------
+
+	double m_horizonRollAngle = 0.0;
+	double m_horizonRollValue = 0.0;
+	double m_horizonPitchAngle = 0.0;
+	double m_horizonPitchValue = 0.0;
 
 	//------------CrossHair Movement--------------------------------
 	double m_crossHairHori = 0.0;
@@ -730,6 +756,19 @@ double Airframe::setNoseWheelAngle(double dt)
 	return m_actuatorNosewheel.inputUpdate(input, dt);
 }
 
+//---------Neu für WeightOnWheels Sensor---------
+void Airframe::setWeightOnWheels(double x)
+{
+	m_weightOnWheels = x;
+}
+
+double Airframe::getWeightOnWheels() const
+{
+	return m_weightOnWheels;
+}
+
+//------------------------------------------------
+
 double Airframe::getNoseWheelAngle() const
 {
 	return -m_noseWheelAngle;
@@ -820,6 +859,27 @@ double Airframe::getGearLeverLamp()
 	return m_gearNPosition;
 }
 
+//------------Instrument lighting---------------
+double Airframe::getInstLight()
+{
+	if (m_input.getElectricSystem() == 1.0)
+	{
+		if (m_input.getInstLightTgl() == 1.0)
+		{
+			m_instLightOn = 1.0;
+		}
+		else
+		{
+			m_instLightOn = 0.0;
+		}
+	}
+	else
+	{
+		m_instLightOn = 0.0;
+	}
+
+	return m_instLightOn;
+}
 
 double Airframe::getSpeedBrakePosition() const
 {
@@ -869,11 +929,18 @@ double Airframe::getHookInd()
 
 double Airframe::overSpeedFlapDamageInd()
 {
-	if (osFlapDamage() > 0.0)
+	if (m_input.getElectricSystem() == 1.0)
 	{
-		m_flapOSind = 1.0;
+		if (osFlapDamage() > 0.0)
+		{
+			m_flapOSind = 1.0;
+		}
+		else if (osFlapDamage() == 0.0)
+		{
+			m_flapOSind = 0.0;
+		}
 	}
-	else if (osFlapDamage() == 0.0)
+	else
 	{
 		m_flapOSind = 0.0;
 	}
@@ -883,14 +950,22 @@ double Airframe::overSpeedFlapDamageInd()
 
 double Airframe::overSpeedGearDamageInd()
 {
-	if (osGearDamage() > 0.0)
+	if (m_input.getElectricSystem() == 1.0)
 	{
-		m_gearOSind = 1.0;
+		if (osGearDamage() > 0.0)
+		{
+			m_gearOSind = 1.0;
+		}
+		else if (osGearDamage() == 0.0)
+		{
+			m_gearOSind = 0.0;
+		}
 	}
-	else if(osGearDamage() == 0.0)
+	else
 	{
 		m_gearOSind = 0.0;
 	}
+
 	return m_gearOSind;
 
 }
@@ -1104,7 +1179,7 @@ double Airframe::getPylonIndLightA()
 }
 
 
-//--------------value cast functions----------------------
+//--------------value cast functions Altimeter and Speed----------------------
 double Airframe::getAltInFeet()
 {
 	return m_altInM * 3.28084;
@@ -1113,6 +1188,18 @@ double Airframe::getAltInFeet()
 double Airframe::getEASinKnots()
 {
 	return m_vKnotsEAS;
+}
+
+//---------------3d-Horizon values for Roll and Pitch-------------------------
+
+double Airframe::getHorizonPitch()
+{
+	return m_horizonPitchValue;
+}
+
+double Airframe::getHorizonRoll()
+{
+	return m_horizonRollValue;
 }
 
 //------------AutoPilot-Stuff-----------------------------

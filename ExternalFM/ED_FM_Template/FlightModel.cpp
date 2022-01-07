@@ -76,6 +76,8 @@ FlightModel::FlightModel
 	CnbNEW(DAT_Cnb_FULL, CON_Cnb_Full_Min, CON_Cnb_FULL_Max),
 	Cndr(DAT_Cndr, CON_Cndrmin, CON_Cndrmax),
 	Cnr(DAT_Cnr, CON_Cnrmin, CON_Cnrmax),
+	Cnp(DAT_Cnp, CON_Cnpmin, CON_Cnpmax),
+	Cnda(DAT_Cnda, CON_Cndamin, CON_Cndamax),
 	Cyb(DAT_Cyb, CON_Cybmin, CON_Cybmax),
 	Cydr(DAT_Cydr, CON_Cydrmin, CON_Cydrmax),
 	
@@ -83,6 +85,8 @@ FlightModel::FlightModel
 	//PMax(DAT_PMax, CON_PMaxmin, CON_PMaxmax)
 	//PFor(DAT_PFor, CON_PFormin, CON_PFormax)
 	ThinAM(DAT_ThinAM, CON_ThinAM_Min, CON_ThinAM_Max),
+	AdThrLAlt(DAT_AdThrLAlt, CON_AdThrLAlt_Min, CON_AdThrLAlt_Max),
+	AdThrLAltMulti(DAT_AdThrLaltMulti, CON_AdThrLAltMulti_Min, CON_AdThrLAltMulti_Max),
 	//---------------Misc-------------------------------------
 	//--------------PitchUP and Stall------------------------
 	PitAoA(DAT_PitchAoA, CON_PitAoAMin, CON_PitAoAMax),
@@ -108,8 +112,11 @@ void FlightModel::zeroInit()
 	CLblc = 0.0;
 
 	//----------NEU TESTWEISE-----------------
-	//----------TESTWEISE um Spin Probleme zu testen bei Rotation der Forces------- 
-	/*Clb_b = 0.0;
+	//----------TESTWEISE um Spin Probleme zu testen bei Rotation der Forces-------
+	//----------HIER Rotation der Momente von der Stability- ind die Body-Axis----
+	//----------Siehe auch CR-2144 Appendix B am Anfang--------------------------
+	//----------Verwednung in der Formel von Allerton in der rottierten Form zum Testen--
+	Clb_b = 0.0;
 	Clp_b = 0.0;
 	Clr_b = 0.0;
 	Clda_b = 0.0;
@@ -119,15 +126,20 @@ void FlightModel::zeroInit()
 	Cnp_b = 0.0;
 	Cnr_b = 0.0;
 	Cnda_b = 0.0;
+	Cndr_b = 0.0;
 
 	CosAoA = 0.0;
 	SinusAoA = 0.0;
 	CosAoA2 = 0.0;
-	SinAoA2 = 0.0;*/
+	SinusAoA2 = 0.0;
+
+	m_corrAoA = 0.0;
+	m_corrBeta = 0.0;
 	//-------------Nach dem Test ggf. auskommentieren oder entfernen---------------
 	//------------ENDE NEU--------------------------------------------------------
 
 	m_thinAirMulti = 0.0;
+	m_addThrust = 0.0;
 
 	m_scalarVelocitySquared = 0.0;
 	m_scalarVelocity = 0.0;
@@ -212,19 +224,73 @@ void FlightModel::airborneInit()
 
 void FlightModel::calculateAeroRotateMoments()
 {
-	//hierfür muss noch Cnp und Cnda angelegt werden, damit die Momente gem. Harold übertragen werden können
 	
+	//---------------AoA Begrenzungsfunktion für WeightOnWheels-----------------
+	if ((m_airframe.getWeightOnWheels() != 0.0) && (m_state.m_mach < 0.07))
+	{
+		if (m_state.m_aoa > 0.35)
+		{
+			m_corrAoA = 0.35;
+		}
+		if (m_state.m_aoa < -0.09)
+		{
+			m_corrAoA = -0.09;
+		}
+	}
+	else
+	{
+		m_corrAoA = m_state.m_aoa;
+	}
+
+	if ((m_airframe.getWeightOnWheels() != 0.0) && (m_state.m_mach < 0.07))
+	{
+		if (m_state.m_beta > 0.10)
+		{
+			m_corrBeta = 0.10;
+		}
+		if (m_state.m_beta < -0.10)
+		{
+			m_corrBeta = -0.10;
+		}
+	}
+	else
+	{
+		m_corrBeta = m_state.m_beta;
+	}
+	
+	
+	//----------TESTWEISE um Spin Probleme zu testen bei Rotation der Forces-------
+	//----------HIER Rotation der Momente von der Stability- ind die Body-Axis----
+	//----------Verwednung in der Formel von Allerton in der rottierten Form zum Testen--
+	//-------------Alte Funktion direkt an State angebunden---------
 	/*CosAoA = cos(m_state.m_aoa);
 	SinusAoA = sin(m_state.m_aoa);
 
 	CosAoA2 = CosAoA * CosAoA;
-	SinAoA2 = SinusAoA * SinusAoA;
+	SinusAoA2 = SinusAoA * SinusAoA;*/
+
+	//-----------Neue Funktion an den corrected AOA angebunden---------------------------
+	CosAoA = cos(m_corrAoA);
+	SinusAoA = sin(m_corrAoA);
+
+	CosAoA2 = CosAoA * CosAoA;
+	SinusAoA2 = SinusAoA * SinusAoA;
+
 
 	//----------Konvertiertung der Momente von der Stabilitäts zu der KörperAchse----------
+	//----------Siehe auch CR-2144 Appendix B am Anfang--------------------------
 	Cnb_b = CnbNEW(m_state.m_mach) * CosAoA + Clb(m_state.m_mach) * SinusAoA;
-	// fehlt noch Cnp_b = Cnp(m_state.m_mach) 
-	Cnr_b = Cnr(m_state.m_mach) * CosAoA2
-    */
+	Cnp_b = Cnp(m_state.m_mach) * CosAoA2 - (Cnr(m_state.m_mach) - (Clp(m_state.m_mach))) * SinusAoA * CosAoA - (-Clr(m_state.m_mach)) * SinusAoA2;
+	Cnr_b = Cnr(m_state.m_mach) * CosAoA2 + ((-Clr(m_state.m_mach)) + Cnp(m_state.m_mach)) * SinusAoA * CosAoA + (Clp(m_state.m_mach)) * SinusAoA2;
+	Cnda_b = Cnda(m_state.m_mach) * CosAoA * Clda(m_state.m_mach) * SinusAoA;
+	Cndr_b = Cndr(m_state.m_mach) * CosAoA - Cldr(m_state.m_mach) * SinusAoA;
+
+	Clb_b = Clb(m_state.m_mach) * CosAoA - CnbNEW(m_state.m_mach) * SinusAoA;
+	Clp_b = (Clp(m_state.m_mach)) * CosAoA2 - ((-Clr(m_state.m_mach)) - Cnp(m_state.m_mach)) * SinusAoA * CosAoA + Cnr(m_state.m_mach) * SinusAoA2;
+	Clr_b = (-Clr(m_state.m_mach)) * CosAoA2 - (Cnr(m_state.m_mach) - (Clp(m_state.m_mach))) * SinusAoA * CosAoA - Cnp(m_state.m_mach) * SinusAoA2;
+	Clda_b = Clda(m_state.m_mach) * CosAoA - Cnda(m_state.m_mach) * SinusAoA;
+	Cldr_b = Cldr(m_state.m_mach) * CosAoA - Cndr(m_state.m_mach) * SinusAoA;
+
 }
 
 void FlightModel::L_stab()
@@ -239,9 +305,18 @@ void FlightModel::L_stab()
 		+ 0.25 * m_state.m_airDensity * m_scalarVelocity * CON_A * CON_b * CON_b * (2.0 * Clp(m_state.m_mach) * m_state.m_omega.x + (1.5 * -Clr(m_state.m_mach)) * m_state.m_omega.y);
 	*/
 
-	//-------------------------NEUE Versíon MIT Beschränkung des Max-Ausschalgs--------------------------------------------------------
-	m_moment.x += m_q * (Clb(m_state.m_mach) * m_state.m_beta + Clda(m_state.m_mach) * (((m_input.getRoll() * m_ailDeflection) + m_input.getTrimmAilR() - m_input.getTrimmAilL()) * m_ailDamage) + (m_lWingDamageCD + m_rWingDamageCD) + (0.55 * Cldr(m_state.m_mach)) * (m_input.getYaw() * m_rudDeflection) + m_stallIndRoll)
+	//-------------------------NEUE Versíon MIT Beschränkung des Max-Ausschalgs-------------------zum testen der Rotation auskommentiert-------------------------------------
+	/*m_moment.x += m_q * (Clb(m_state.m_mach) * m_state.m_beta + Clda(m_state.m_mach) * (((m_input.getRoll() * m_ailDeflection) + m_input.getTrimmAilR() - m_input.getTrimmAilL()) * m_ailDamage) + (m_lWingDamageCD + m_rWingDamageCD) + (0.55 * Cldr(m_state.m_mach)) * (m_input.getYaw() * m_rudDeflection) + m_stallIndRoll)
 		+ 0.25 * m_state.m_airDensity * m_scalarVelocity * CON_A * CON_b * CON_b * (2.0 * Clp(m_state.m_mach) * m_state.m_omega.x + (1.5 * -Clr(m_state.m_mach)) * m_state.m_omega.y);
+		*/
+	
+	//-----------Input Clr aud -Clr in der Rotationsformel geändert und "-" vor Clr hier entfernt (sehr gut)------
+	//-----------Multiplikator Clp in der Rotationsformel eingefügt und entfernt wegen Blödheit-----------------------------------
+	//-----------Multiplikator in der Moment Formel für Clp_b von 2.0 auf 1.2 und auf 1.25 auf 1.35 und Clr_b von 1.5 auf 1.1 und auf 1.15------------------------------------------------------
+	//----------m_stallIndRoll verringert auf (s.u.)-----------------------------------------------------------------------------------
+	//-----------anstatt m_state.m_beta m_corrBeta zum Ausgleich für WeightOnWheels----------------------------------------------------
+	m_moment.x += m_q * (Clb_b * m_corrBeta + Clda_b * (((m_input.getRoll() * m_ailDeflection) + m_input.getTrimmAilR() - m_input.getTrimmAilL()) * m_ailDamage) + (m_lWingDamageCD + m_rWingDamageCD) + (0.55 * Cldr_b) * (m_input.getYaw() * m_rudDeflection) + m_stallIndRoll)
+		+ 0.25 * m_state.m_airDensity * m_scalarVelocity * CON_A * CON_b * CON_b * (((1.35 - m_stallMult) * Clp_b) * m_state.m_omega.x + ((1.15 - m_stallMult) * Clr_b) * m_state.m_omega.y);
 }
 
 void FlightModel::M_stab()
@@ -257,9 +332,19 @@ void FlightModel::M_stab()
 	//1.35 * Cmalpha; 1.75 * cmq; 1.45 * cmadot //Werte werden verändert für geringere Resistenz gegenüber Pitch
 	// "+ m_CmqStAG" eingefügt
 
-	//----------------NEUE Version mit Ausschlagsbeschränkung auf max Ausschlag Backstick-------------------------------------------------------------------------------------------------
-	m_moment.z += m_k * CON_mac * (1.35 * (CmalphaNEW(m_state.m_mach) * m_state.m_aoa) + (-CmdeNEW(m_state.m_mach)) * ((((m_input.getPitch() * m_elevDeflection) + m_pitchup) + m_input.getTrimmUp() - m_input.getTrimmDown() + m_airframe.getAutoPilotAltH()) * m_hStabDamage))
-		+ 0.25 * m_state.m_airDensity * m_scalarVelocity * CON_A * CON_mac * CON_mac * ((1.75 * Cmq(m_state.m_mach) + m_CmqStAg) * m_state.m_omega.z + ((1.95 * CmadotNEW(m_state.m_mach)) + m_CmaDOTStAg ) * m_aoaDot );
+	//----------------NEUE Version mit Ausschlagsbeschränkung auf max Ausschlag Backstick--------------Cm bleibt unberhürt von der Rotation-----------------------------------------------------------------------------------
+	//Alte Formel mit PitchUp als Anteil des Elevetor-Ausschlags
+	/*m_moment.z += m_k * CON_mac * (1.35 * (CmalphaNEW(m_state.m_mach) * m_state.m_aoa) + (-CmdeNEW(m_state.m_mach)) * ((((m_input.getPitch() * m_elevDeflection) + m_pitchup) + m_input.getTrimmUp() - m_input.getTrimmDown() + m_airframe.getAutoPilotAltH()) * m_hStabDamage))
+		+ 0.25 * m_state.m_airDensity * m_scalarVelocity * CON_A * CON_mac * CON_mac * (((1.75 - m_stallMult) * Cmq(m_state.m_mach) + m_CmqStAg) * m_state.m_omega.z + (((1.95 - m_stallMult) * CmadotNEW(m_state.m_mach)) + m_CmaDOTStAg ) * m_aoaDot );
+	*/
+	//---------------NEUE Formel mit Pitchup als separater Funktion für Pitch ohne Anbindung an den Elevator---------------------
+	//---------------Alte Funktion mit direkter Anbindung an m_state.m_aoa-------------------------------------------------------
+	//m_moment.z += m_k * CON_mac * (1.35 * (CmalphaNEW(m_state.m_mach) * m_state.m_aoa) + (-CmdeNEW(m_state.m_mach)) * (((m_input.getPitch() * m_elevDeflection) + m_input.getTrimmUp() - m_input.getTrimmDown() + m_airframe.getAutoPilotAltH()) * m_hStabDamage) + m_pitchup)
+		//+ 0.25 * m_state.m_airDensity * m_scalarVelocity * CON_A * CON_mac * CON_mac * (((1.75 - m_stallMult) * Cmq(m_state.m_mach) + m_CmqStAg) * m_state.m_omega.z + (((1.95 - m_stallMult) * CmadotNEW(m_state.m_mach)) + m_CmaDOTStAg) * m_aoaDot);
+	
+	//------------------------Neue Formel über corrAoA an m_state.m_aoa angebunden und m_corrBeta statt m_state.m_beta-----------------------------------------------------------
+	m_moment.z += m_k * CON_mac * (1.35 * (CmalphaNEW(m_state.m_mach) * m_corrAoA) + (-CmdeNEW(m_state.m_mach)) * (((m_input.getPitch() * m_elevDeflection) + m_input.getTrimmUp() - m_input.getTrimmDown() + m_airframe.getAutoPilotAltH()) * m_hStabDamage) + m_pitchup)
+		+ 0.25 * m_state.m_airDensity * m_scalarVelocity * CON_A * CON_mac * CON_mac * (((1.75 - m_stallMult) * Cmq(m_state.m_mach) + m_CmqStAg) * m_state.m_omega.z + (((1.95 - m_stallMult) * CmadotNEW(m_state.m_mach)) + m_CmaDOTStAg) * m_aoaDot);
 
 }
 
@@ -279,9 +364,15 @@ void FlightModel::N_stab()
 
 	//----------------------------NEUE Version mit Beschränkung des max-Ruderausschlags-----------------------------------------------------
 	// ((1.5 - (0.95 * m_stallMult)) // ((2.5 - m_stallMult) * Cnr(m_state.m_mach) * m_state.m_omega.y) ALT
+	//neu eingefügt ist: "+ (Cnda(m_state.m_mach) * (m_input.getRoll() * m_ailDeflection))" und "(Cnp(m_state.m_mach) * m_state.m_omega.x) +"
+	//-----------------------auskommentiert zum Testen der rotierten Yaw-Werte----------------------------------------------------------------
 	
-	m_moment.y += m_q * ((1.2 - (0.95 * m_stallMult)) * -CnbNEW(m_state.m_mach) * m_state.m_beta + -Cndr(m_state.m_mach) * (-m_input.getYaw() * m_rudDeflection))
-		+ 0.25 * m_state.m_airDensity * m_scalarVelocity * CON_A * CON_b * CON_b * ((2.1 - m_stallMult) * Cnr(m_state.m_mach) * m_state.m_omega.y);
+	/*m_moment.y += m_q * (((1.2 - (0.95 * m_stallMult)) * -CnbNEW(m_state.m_mach) * m_state.m_beta) + (Cnda(m_state.m_mach) * (m_input.getRoll() * m_ailDeflection)) + -Cndr(m_state.m_mach) * (-m_input.getYaw() * m_rudDeflection))
+		+ 0.25 * m_state.m_airDensity * m_scalarVelocity * CON_A * CON_b * CON_b * ((Cnp(m_state.m_mach) * m_state.m_omega.x) + ((2.1 - m_stallMult) * Cnr(m_state.m_mach) * m_state.m_omega.y));
+	*/
+	//-------------------m_corrBeta statt m_state.m_beta---------------------------------------------------------------------------------------------------------------------------
+	m_moment.y += m_q * (((1.2 - (0.95 * m_stallMult)) * -Cnb_b * m_corrBeta) + (Cnda_b * (m_input.getRoll() * m_ailDeflection)) + -Cndr_b * (-m_input.getYaw() * m_rudDeflection))
+		+ 0.25 * m_state.m_airDensity * m_scalarVelocity * CON_A * CON_b * CON_b * ((Cnp_b * m_state.m_omega.x) + ((2.1 - m_stallMult) * Cnr_b * m_state.m_omega.y));
 }
 
 
@@ -295,7 +386,8 @@ void FlightModel::lift()
 	//m_force.y += m_k * (((CLa(m_state.m_mach) * m_state.m_aoa) + ((CLFlaps + CLblc) * m_flapDamage)) * ((m_lWingDamageCL + m_rWingDamageCL) / 2.0 ) ); //+ CLds(m_state.m_mach)); //aktuell nur Lift due to AoA ohne Stab-Lift 
 	
 	//------------------neue Lift-Formel mit dynamischem Flap-Lift---------------------------------------------------
-	m_force.y += m_k * ((((CLa(m_state.m_mach) * m_state.m_aoa) + ((0.65 * CLds(m_state.m_mach)) * m_elevDeflection) + ((CLFlaps + CLblc) * m_flapDamage)) * ((m_lWingDamageCL + m_rWingDamageCL) / 2.0)) * m_zeroLift);
+	//---------m_state.m_aoa ersetzt durch m_corrAoA-----------------------------------------------------------------
+	m_force.y += m_k * ((((CLa(m_state.m_mach) * m_corrAoA) + ((0.65 * CLds(m_state.m_mach)) * m_elevDeflection) + ((CLFlaps + CLblc) * m_flapDamage)) * ((m_lWingDamageCL + m_rWingDamageCL) / 2.0)) * m_zeroLift);
 }
 
 void FlightModel::drag()
@@ -307,7 +399,8 @@ void FlightModel::drag()
 		//+ ((CLmach(m_state.m_mach) + CLa(m_state.m_mach)) * (CLmach(m_state.m_mach) + CLa(m_state.m_mach))) / CON_pi * CON_AR * CON_e));
 	// statt 0.85 jetzt 0.80 * CDa(etc) um Alpha-Drag anzupassen.
 	//jetzt wieder 1.0 vor CDa, da aufgrund der Rotation der Drag anders "angreift"
-	m_force.x += -m_k * ((CDmin(m_state.m_mach)) + (1.00 * (CDa(m_state.m_mach) * m_state.m_aoa)) + (CDeng(m_state.m_mach)) + CDGear + CDFlaps + CDBrk + CDBrkCht + CD_OverMach + m_cdminADD + CD_brFlap + m_stallIndDrag); // +CDwave + CDi); CDwave und CDi wieder dazu, wenn DRAG geklärt.
+	//----------------------------------m_state.m_aoa durch m_corrAoA ersetzt--------------------------------------------------------------
+	m_force.x += -m_k * ((CDmin(m_state.m_mach)) + (1.00 * (CDa(m_state.m_mach) * m_corrAoA)) + (CDeng(m_state.m_mach)) + CDGear + CDFlaps + CDBrk + CDBrkCht + CD_OverMach + m_cdminADD + CD_brFlap + m_stallIndDrag); // +CDwave + CDi); CDwave und CDi wieder dazu, wenn DRAG geklärt.
 }
 
 void FlightModel::sideForce()
@@ -315,7 +408,8 @@ void FlightModel::sideForce()
 	//set side force
 	//m_force.z
 	//vor m_input.getYaw() ein "-" eingefügt, da eigentlich "-"Yaw richtig-herum ist.
-	m_force.z += m_k * ((Cydr(m_state.m_mach) * (m_input.getYaw() * m_rudDeflection)) + (Cyb(m_state.m_mach) * m_state.m_beta)); //neu eingefügt 28Mar21
+	//------------m_corrBeta statt m_state.m_beta zum Ausgleich bei WeightOnWheels
+	m_force.z += m_k * ((Cydr(m_state.m_mach) * (m_input.getYaw() * m_rudDeflection)) + (Cyb(m_state.m_mach) * m_corrBeta)); //neu eingefügt 28Mar21
 }
 
 void FlightModel::thrustForce()
@@ -324,7 +418,7 @@ void FlightModel::thrustForce()
 	//m_force.x positive
 	//m_force = Vec3();
 	//m_engine.update(123); //neu eingefügt// und wieder zum testen auskommentiert 
-	m_force.x += m_engine.updateThrust() * m_airframe.getEngineDamageMult() * m_thinAirMulti; //NEU m_thinAirMulti angefügt für Thrustreduktion ab 94.000 ft.
+	m_force.x += abs((m_engine.updateThrust() + m_addThrust) * m_airframe.getEngineDamageMult() * m_thinAirMulti); //ABS eingefügt für nur positiv Schub!! NEU m_thinAirMulti angefügt für Thrustreduktion ab 94.000 ft.
 	//printf("vector %f \n", m_engine.updateThrust()); //neu eingebaut für Ausgabe
 }
 
@@ -361,7 +455,8 @@ void FlightModel::calcAeroDeflection()
 
 void FlightModel::calcLiftFlaps()
 {
-	CLFlaps = ((CLa_FL2(m_state.m_mach) * m_state.m_aoa) + CL_FlStat(m_state.m_mach)) * m_airframe.getFlapsPosition();
+	//------------------------m_state.m_aoa ersetzt durch m_corrAoA---------------------------------------------------
+	CLFlaps = ((CLa_FL2(m_state.m_mach) * m_corrAoA) + CL_FlStat(m_state.m_mach)) * m_airframe.getFlapsPosition();
 
 	CLblc = (m_airframe.BLCsystem() * CLFlaps) * 0.8;//NEU * 0.8 eingefügt
 }
@@ -392,35 +487,47 @@ void FlightModel::calcZeroLift()
 {
 	m_setLiftZero = CLzero(m_state.m_mach);
 
-	if (m_state.m_aoa >= m_setLiftZero)
+	//-----------WeightOnWheels-Sensor eingefügt, da bei LiftOff getWeightOnWheels() == 0.0---------------
+
+	if (m_airframe.getWeightOnWheels() == 0.0)
 	{
-		m_zeroLift = 0.01;
+		if (m_state.m_aoa >= m_setLiftZero)
+		{
+			m_zeroLift = 0.01;
+		}
+		else
+		{
+			m_zeroLift = 1.0;
+		}
+
+		if ((m_state.m_aoa >= m_setLiftZero) && (m_state.m_angle.x >= 0.0) && ((m_state.m_aoa > 0.42) && (m_state.m_aoa < 1.745))) //
+		{
+			m_stallIndRoll = 0.10;  //0.25 jetzt mit weniger, weil ich den m_stallIndRoll vor die Klammer gezogen habe und er jetzt nicht mit kleiner 1 multipliziert wird.
+								//von 0.25 auf 0.20 wegen Rotation der Momente wieder auf 0.30 wegen stärkerer Dämpfung zurück zu 0.15 zu 0.10
+		}
+		else if ((m_state.m_aoa >= m_setLiftZero) && (m_state.m_angle.x < 0.0) && ((m_state.m_aoa > 0.42) && (m_state.m_aoa < 1.745))) //
+		{
+			m_stallIndRoll = -0.10;//-0.25 zurück zu 0.15 zu 0.10
+		}
+		else
+		{
+			m_stallIndRoll = 0.0;
+		}
+
+		if (m_state.m_aoa > m_setLiftZero)
+		{
+			m_stallIndDrag = (CDa(m_state.m_mach) * m_state.m_aoa) * 3.0;//war 1.5 jetzt 2.2 jetzt 2.8 jetzt 3.0
+		}
+		else
+		{
+			m_stallIndDrag = 0.0;
+		}
 	}
 	else
 	{
 		m_zeroLift = 1.0;
-	}
-
-	if ((m_state.m_aoa >= m_setLiftZero) && (m_state.m_angle.x >= 0.0) && ((m_state.m_aoa > 0.42) && (m_state.m_aoa < 1.745))) //
-	{
-		m_stallIndRoll = 0.25;//0.25 jetzt mit weniger, weil ich den m_stallIndRoll vor die Klammer gezogen habe und er jetzt nicht mit kleiner 1 multipliziert wird.
-	}
-	else if ((m_state.m_aoa >= m_setLiftZero) && (m_state.m_angle.x < 0.0) && ((m_state.m_aoa > 0.42) && (m_state.m_aoa < 1.745))) //
-	{
-		m_stallIndRoll = -0.25;//-0.25
-	}
-	else
-	{
-		m_stallIndRoll = 0.0;
-	}
-
-	if (m_state.m_aoa > m_setLiftZero)
-	{
-		m_stallIndDrag = (CDa(m_state.m_mach) * m_state.m_aoa) * 1.5;
-	}
-	else
-	{
 		m_stallIndDrag = 0.0;
+		m_stallIndRoll = 0.0;
 	}
 }
 
@@ -459,14 +566,41 @@ void FlightModel::brokenFlapDrag()
 	}
 }
 
+void FlightModel::addedThrustCalc()
+{
+	//-------------------Alte Version ohne Throttle---------------------------------------
+	//m_addThrust = AdThrLAlt(m_state.m_mach) * AdThrLAltMulti(m_airframe.getAltInFeet());
+
+	//hier jetzt die Throttle mit eingefügt und als multiplikator für den added-Thrust eingefügt
+	
+	double corrThrottle = 0.0;
+
+
+	if (m_input.getThrottle() >= 0.0)
+	{
+		corrThrottle = (1.0 - CON_ThrotIDL) * m_input.getThrottle() + CON_ThrotIDL;
+	}
+	else
+	{
+		corrThrottle = (m_input.getThrottle() + 1.0) / 2.0;
+	}
+
+	m_addThrust = corrThrottle * (AdThrLAlt(m_state.m_mach) * AdThrLAltMulti(m_airframe.getAltInFeet()));
+
+}
+
 void FlightModel::update(double dt)
 {
 	m_moment = Vec3();
 	m_force = Vec3();
 
+	//---------------Alte Formulierung mit direkter Anbindung an m_state.m_aoa----------
+	//m_aoaDot = (m_state.m_aoa - m_aoaPrevious) / dt;
+	//m_aoaPrevious = m_state.m_aoa;
 
-	m_aoaDot = (m_state.m_aoa - m_aoaPrevious) / dt;
-	m_aoaPrevious = m_state.m_aoa;
+	//----------------neue Formulierung über m_corrAoA---------------------------------
+	m_aoaDot = (m_corrAoA - m_aoaPrevious) / dt;
+	m_aoaPrevious = m_corrAoA;
 
 	m_scalarVelocity = magnitude(m_state.m_localAirspeed);
 	m_scalarVelocitySquared = m_scalarVelocity * m_scalarVelocity;
@@ -493,6 +627,7 @@ void FlightModel::update(double dt)
 	CDBrkCht = CON_ChtD * m_airframe.brkChutePosition();
 	//CLblc = m_airframe.BLCsystem() * CLFlaps;
 	
+	calculateAeroRotateMoments();
 	L_stab();
 	M_stab();
 	N_stab();
@@ -507,46 +642,70 @@ void FlightModel::update(double dt)
 	addedDrag();
 	brokenFlapDrag();
 	calcZeroLift();
+	addedThrustCalc();
 
-	//printf("boddy_force_X %f \n", m_force_boddy.x);
-	//printf("boddy_force_Y %f \n", m_force_boddy.y);
-	//printf("boddy_force_Z %f \n", m_force_boddy.z);
+	//printf("Thrust_AND_Drag_Force_Complete %f\n", m_force.x);
+	//printf("Engine_Thrust %f\n", m_engine.updateThrust());
+	//printf("Added_Thrust %f\n", m_addThrust);
+	//printf("Thin_Air_Multi %f\n", m_thinAirMulti);
+	//printf("Pitch_Moment_Full %f\n", m_moment.z);
+	//printf("Yaw_Moment_Full %f\n", m_moment.y);
+	//printf("X_Force_Full %f\n", m_force.x);
+	//printf("Engine_Thrust %f\n", (m_engine.updateThrust() + m_addThrust));
+	//printf("AoA in Rad %f\n", m_state.m_aoa);
+	//printf("CorrectedAoA in RAD %f\n", m_corrAoA);
+	//printf("Beta in Rad %f\n", m_state.m_beta);
+	//printf("Corrected Beta in Rad %f\n", m_corrBeta);
+	//printf("Pitchup_Factor %f\n", m_pitchup);
+	//printf("Stall_Multiplier %f\n", m_stallMult);
+	//printf("Weight_On_Wheels %f\n", m_airframe.getWeightOnWheels());
 
 
 	// printf("CD broken Flap %f \n", CD_brFlap);
 
 	//printf("CL Total %f \n", m_force.y);
+
 	//----------------function for Pitchup-Factor, Pitchup-force and pitchup-speed--------------------
-	if ((m_state.m_aoa >= 0.2617) && (m_airframe.getFlapsPosition() == 0.0) && (m_state.m_mach > 0.26))
+	if (m_airframe.getWeightOnWheels() == 0.0)
 	{
-		m_pitchup = 1.25 * ((PitAoA(m_state.m_aoa) * PitMult(m_state.m_mach))); //war 0.65 * zu 0.95 zu 1.25 
-	}
-	else if ((m_state.m_aoa >= 0.2617) && ((m_airframe.getFlapsPosition() > 0.0) || (m_state.m_mach <= 0.26)))
-	{
-		m_pitchup = 0.95 * ((PitAoA(m_state.m_aoa) * PitMult(m_state.m_mach))); // war 0.45 * zu 0.65 zu 0.95
+
+
+		if ((m_state.m_aoa >= 0.2617) && (m_airframe.getFlapsPosition() == 0.0) && (m_state.m_mach > 0.26))
+		{
+			m_pitchup = 1.35 * ((PitAoA(m_state.m_aoa) * PitMult(m_state.m_mach))); //war 0.65 * zu 0.95 zu 1.25 zu 1.35 
+		}
+		else if ((m_state.m_aoa >= 0.2617) && ((m_airframe.getFlapsPosition() > 0.0) || (m_state.m_mach <= 0.26)))
+		{
+			m_pitchup = 0.95 * ((PitAoA(m_state.m_aoa) * PitMult(m_state.m_mach))); // war 0.45 * zu 0.65 zu 0.95
+		}
+		else
+		{
+			m_pitchup = 0.0;
+		}
+		//printf("m_pitchup %f \n", m_pitchup);
+		//printf("AoA %f \n", m_state.m_aoa);
+
+		//-------------function for Stall-AoA and Stall-Speed and resulting stall-force----------------------------------------------
+		if ((m_state.m_aoa >= 0.2533) && (m_airframe.getFlapsPosition() == 0.0))
+		{
+			m_stallMult = 1.65 * (StAoA(m_state.m_aoa) * StAoAMulti(m_state.m_mach));//von 1.75 zu 2.25 zu 1.95 zu 1.45 zu 2.01 zu 1.85 zu 2.05 zu 2.15//neuer Multiplikator 1.65
+		}
+		else if ((m_state.m_aoa >= 0.2533) && (m_airframe.getFlapsPosition() > 0.0)) // || (m_state.m_mach <= 0.26)))
+		{
+			m_stallMult = 0.95 * (StAoA(m_state.m_aoa) * StAoAMulti(m_state.m_mach)); //von 1.25 auf 1.75 auf 1.45 zu 1.15 zu 0.95 zu 0.65//neuer Multiplikator 0.95
+		}
+		else
+		{
+			m_stallMult = 0.0;
+		}
+		//printf("m_stallMult %f \n", m_stallMult);
 	}
 	else
 	{
 		m_pitchup = 0.0;
-	}
-	//printf("m_pitchup %f \n", m_pitchup);
-	//printf("AoA %f \n", m_state.m_aoa);
-	
-	//-------------function for Stall-AoA and Stall-Speed and resulting stall-force----------------------------------------------
-	if ((m_state.m_aoa >= 0.2533) && (m_airframe.getFlapsPosition() == 0.0))
-	{
-		m_stallMult = 1.65 * (StAoA(m_state.m_aoa) * StAoAMulti(m_state.m_mach));//von 1.75 zu 2.25 zu 1.95 zu 1.45 zu 2.01 zu 1.85 zu 2.05 zu 2.15//neuer Multiplikator 1.65
-	}
-	else if ((m_state.m_aoa >= 0.2533) && (m_airframe.getFlapsPosition() > 0.0)) // || (m_state.m_mach <= 0.26)))
-	{
-		m_stallMult = 0.95 * (StAoA(m_state.m_aoa) * StAoAMulti(m_state.m_mach)); //von 1.25 auf 1.75 auf 1.45 zu 1.15 zu 0.95 zu 0.65//neuer Multiplikator 0.95
-	}
-	else
-	{
 		m_stallMult = 0.0;
-	}
-	//printf("m_stallMult %f \n", m_stallMult);
 
+	}
 	//------------------ThinAir-Multiplyer-------------------------- // NEU-NEU-NEU
 	if (m_airframe.getAltInFeet() < 94000.0)
 	{
@@ -639,7 +798,11 @@ void FlightModel::update(double dt)
 	//printf("Roll %f \n", m_input.m_roll);
 
 	//das muss hier hinten hin, damit m_force durch das update der Lift und Drag-Funktionen gefüllt ist. Sonnst ist m_force = 0.0
-	m_force_boddy = windAxisToBodyAxis(m_force, m_state.m_aoa, m_state.m_beta);
+	//-------------------Alte formulierung mit direkter Anbindung-----------------
+	//m_force_boddy = windAxisToBodyAxis(m_force, m_state.m_aoa, m_state.m_beta);
+
+	//-------------neue Formulierung mit Anbindung über m_corrAoA und m_corrBeta anstatt m_state.m_aoa und m_state.m_beta----------------
+	m_force_boddy = windAxisToBodyAxis(m_force, m_corrAoA, m_corrBeta);
 
 	//printf("boddy_force_X %f \n", m_force_boddy.x);
 	//printf("boddy_force_Y %f \n", m_force_boddy.y);

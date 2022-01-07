@@ -95,6 +95,8 @@ enum Command
 	COMMAND_QNH_DOWN = 317,
 	COMMAND_QNH_STOP = 318,
 
+	COMMAND_INST_LIGHT_TGL = 1011,
+
 
 
 	//--------------------------------------
@@ -200,7 +202,7 @@ class Input
 			m_qnhSTOP = 0.0;
 			m_retQNH = 101320.0;//statt 101325.0
 
-
+			m_instLightTgl = 0.0;
 		}
 
 		
@@ -249,7 +251,7 @@ class Input
 
 		inline const void throttle(double value)
 		{
-			m_throttle = value;
+			m_throttle = -value; //ein Versuch für eine NICHT invertierte Axe in der Hoffnung, dass auch das "Rückwärts" Problem weg ist
 			//return m_throttle;
 		}
 
@@ -682,6 +684,23 @@ class Input
 		inline const double getLightToggle()
 		{
 			return m_light_toggle;
+		}
+
+		inline const void instLightTgl()
+		{
+			if (m_instLightTgl == 0.0)
+			{
+				m_instLightTgl = 1.0;
+			}
+			else
+			{
+				m_instLightTgl = 0.0;
+			}
+		}
+
+		inline const double getInstLightTgl()
+		{
+			return m_instLightTgl;
 		}
 
 		inline const void electricSystem()
@@ -1291,5 +1310,7 @@ class Input
 	double m_retQNH = 0.0;
 	double m_qnhPlus = 0.0;
 	double m_qnhMinus = 0.0;
+
+	double m_instLightTgl = 0.0;
 };
 

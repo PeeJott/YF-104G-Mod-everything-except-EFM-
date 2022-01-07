@@ -37,6 +37,7 @@ public:
 	void update(double dt);
 
 	void calculateAeroRotateMoments();
+	void addedThrustCalc();
 
 	void L_stab();
 	void M_stab();
@@ -87,6 +88,7 @@ private:
 	//--------------Thrust related Values-----------------------------
 	//double m_thrust = 0.0; //neu 21FEb21 rauskommentiert 28.02.2021
 	double m_thinAirMulti = 0.0;
+	double m_addThrust = 0.0;
 	//--------------Misc---------------------------------------------
 	//--------------PitchUp and Stall--------------------------------
 	double m_pitchup = 0.0;
@@ -113,8 +115,12 @@ private:
 					  
 	//------------NEU eingefügt testweise----NEU---NEU----NEU---------------
 	//---------------Coefficients and Derivatives for calculation AERO--------
+	
+	//---------------AoA + Beta Correction for WeightOnWheels-----------------------
+	double m_corrAoA = 0.0;
+	double m_corrBeta = 0.0;
 	//---------------sufix "b" for conversion from stability axis to body axis----
-	/*double Clb_b = 0.0;
+	double Clb_b = 0.0;
 	double Clp_b = 0.0;
 	double Clr_b = 0.0;
 	double Clda_b = 0.0;
@@ -124,13 +130,14 @@ private:
 	double Cnp_b = 0.0;
 	double Cnr_b = 0.0;
 	double Cnda_b = 0.0;
+	double Cndr_b = 0.0;
 	
 	//------------------rotational formulas to rotate moments around Alpha
 	double CosAoA = 0.0;
 	double SinusAoA = 0.0;
 	double CosAoA2 = 0.0;
-	double SinAoA2 = 0.0;
-	*/
+	double SinusAoA2 = 0.0;
+	
 	//------------ENDE NEU-----------ENDE NEU-----------------ENDE NEU--------
 
 
@@ -216,12 +223,16 @@ private:
 	Table CnbNEW;
 	Table Cndr;
 	Table Cnr;
+	Table Cnp;
+	Table Cnda;
 	Table Cyb;
 	Table Cydr;
 	//-------------Thrust------------------------
 	//Table PMax;
 	//Table PFor;
 	Table ThinAM;
+	Table AdThrLAlt;
+	Table AdThrLAltMulti;
 	//------------Misc---------------------------
 	//------------PitchUp and Stall-------------
 	Table PitAoA;

@@ -1,7 +1,7 @@
 dofile(LockOn_Options.script_path.."devices.lua")
 dofile(LockOn_Options.script_path.."command_defs.lua")
 
-local HUD_System = GetSelf()
+local DARKEN_HUD_System = GetSelf()
 local dev = GetSelf()
 local sensor_data		= get_base_data()
 
@@ -11,6 +11,34 @@ make_default_activity(update_time_step)
 --local Parameter = get_param_handle("HUDBrightnessDown") //Test für später
 --Parameter:set(0)
 
+dev:listen_command(auto_HUD_brightness_down)
+
+function keys_auto_HUD_brightness_down(value)
+	--dispatch_action(nil, Keys.auto_HUD_brightness_down) //das ist glaube ich falsch
+	dispatch_action(nil, ICommandHUDBrightnessDown)
+	dispatch_action(nil, ICommandHUDBrightnessDown)
+	dispatch_action(nil, ICommandHUDBrightnessDown)
+	dispatch_action(nil, ICommandHUDBrightnessDown)
+	dispatch_action(nil, ICommandHUDBrightnessDown)
+	dispatch_action(nil, ICommandHUDBrightnessDown)
+	dispatch_action(nil, ICommandHUDBrightnessDown)
+	dispatch_action(nil, ICommandHUDBrightnessDown)
+	dispatch_action(nil, ICommandHUDBrightnessDown)
+	dispatch_action(nil, ICommandHUDBrightnessDown)
+	dispatch_action(nil, ICommandHUDBrightnessDown)
+end
+
+command_table = {
+    [Keys.auto_HUD_brightness_down] = keys_auto_HUD_brightness_down,
+   --hier kommen dann ganz viele andere noch rein....
+}
+
+function SetCommand(command, value)
+
+    if command_table[command] then
+        command_table[command](value)
+    end
+end
 ------------------------------------------------------------------FUNCTION-POST-INIT---------------------------------------------------------------------------------------------------
 function post_initialize()
 	
@@ -230,3 +258,5 @@ function update()
 
 
 end
+
+need_to_be_closed = false

@@ -156,6 +156,10 @@ extern "C"
 	/*
 		get internal fuel volume 
 	*/
+	//-----------------NEU EINGEFÜGT für Refueling------------------
+	ED_FM_TEMPLATE_API void ed_fm_refueling_add_fuel(double fuel);
+	//------------------NEU eingefügt ENDE-------------------------
+
 	ED_FM_TEMPLATE_API double ed_fm_get_internal_fuel();
 	/*
 		set external fuel volume for each payload station , called for weapon init and on reload
@@ -190,5 +194,7 @@ extern "C"
 	ED_FM_TEMPLATE_API bool ed_fm_need_to_be_repaired();//um anzuzeigen dass internes Damage einen Repair braucht...
 
 	ED_FM_TEMPLATE_API double ed_fm_get_shake_amplitude(); //neu eingefügt wegen Cockpit-Shaker-Function in flightModel.h und flightModel.cpp
-
+	
+	//ed_fm_suspension_feedback eingefügt wegen AoA-Problem am Boden
+	ED_FM_TEMPLATE_API void ed_fm_suspension_feedback(int idx, const ed_fm_suspension_info* info);
 };
