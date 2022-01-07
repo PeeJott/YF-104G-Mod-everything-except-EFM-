@@ -17,7 +17,7 @@ end
 function update()
 end
 
-need_to_be_closed = false
+need_to_be_closed = true
 
 
 --possible sensor_data 

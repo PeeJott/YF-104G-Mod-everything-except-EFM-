@@ -1,11 +1,16 @@
 dofile(LockOn_Options.common_script_path.."elements_defs.lua")
+dofile(LockOn_Options.common_script_path.."Fonts/symbols_locale.lua")
+dofile(LockOn_Options.common_script_path.."Fonts/fonts_cmn.lua")
 
 local HUD_TEXTURES_PATH        = LockOn_Options.script_path .. "Textures/" 
  
 SetScale(METERS) --das setzt eine Betrachtungsweise/Scala für die Maßangaben. Anderer Möglichkeiten in (FOV) oder (MILLYRADIENS) gem. elements_defs.lua im Installationsordner 
 
-materials = {}
-materials["GUN_PIPPER_ORANGE"]	=	{255.0, 139.0, 50.0, 255.0}
+--Diese Materials werden anders benutzt. Für HUD-Materials die Local-Aufzählung unten benutzen---------------
+--materials = {}
+--materials["GUN_PIPPER_ORANGE"]	=	{255.0, 139.0, 50.0, 150.0}
+
+local GunpipperOrange = {255.0, 139.0, 50.0, 220.0} --this is the color and Name of the Material for the GunPipper...
 
 -------Einmal eine Konvertierung-Funktionen-Liste, weil es nicht schaden kann----------
 DEGREE_TO_MRAD = 17.4532925199433
@@ -18,7 +23,7 @@ HUD_DEFAULT_LEVEL = 2
 HUD_DEFAULT_NOCLIP_LEVEL  = HUD_DEFAULT_LEVEL - 1  
 -------------------------------------------------------------------------------------
 
-HUD_GUNPIPPER_TEXT = MakeMaterial(HUD_TEXTURES_PATH.."VSN_F104_CPT_GUN_C.dds", GUN_PIPPER_ORANGE)
+HUD_GUNPIPPER_TEXT = MakeMaterial(HUD_TEXTURES_PATH.."GUNSIGHT_TEXTURE_600x600.tga", GunpipperOrange)
 
 ----------diese Local-Funktion ist der default-generator für einen Kasten durch Indices(triangles)---
 local box_indices =
@@ -72,12 +77,12 @@ local object = CreateElement "ceTexPoly"
 end
 
 function AddHudElement(object)
-	object.h_clip_relation  = h_clip_relations.COMPARE	--INCREASE_IF_LEVEL  
-	object.level  		 	= HUD_DEFAULT_LEVEL 
+	object.h_clip_relation  = h_clip_relations.COMPARE	--INCREASE_IF_LEVEL zuvor war es .COMPARE 
+	object.level  		 	= HUD_DEFAULT_LEVEL --zuvor war es einfach HUD_DEFAULT_LEVEL 
     object.use_mipfilter    = true
 	object.additive_alpha   = true
     object.collimated       = true
-	object.blend_mode 		=  blend_mode.IBM_REGULAR_ADDITIVE_ALPHA
+	object.blend_mode 		=  blend_mode.IBM_REGULAR_ADDITIVE_ALPHA --einfach mal auskommentiert, war vorher drin
     Add(object)
 end
 

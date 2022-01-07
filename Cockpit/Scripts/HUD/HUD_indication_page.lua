@@ -43,10 +43,10 @@ HUD_BASE.init_pos				= {0.0, 0.0, 0.0}									--{0, -1.345,0}
 AddHudElement(HUD_BASE)
 
 -----------Finally, the Gunpipper built through the function/s in HUD_definitions.lua-----------------------------------------------------------
-GUN_PIPPER 						= create_HUD_texture(HUD_GUNPIPPER_TEXT, 0,0,1024,1024, 0.1)
+GUN_PIPPER 						= create_HUD_texture(HUD_GUNPIPPER_TEXT, 0,0,1024,1024, 0.022)
 GUN_PIPPER.name					= create_guid_string()
-GUN_PIPPER.init_pos				= {0, 0, 0}
-GUN_PIPPER.parent_element		= HUD_BASE.name
+GUN_PIPPER.init_pos				= {0.0, 0.0, 0.0}
+GUN_PIPPER.parent_element		= HUD_BASE.name --mal auskommentiert
 --GUN_PIPPER.element_params 	= {"HUD_BRIGHTNESS","HUD_MODE","RED_HUD"}
 --GUN_PIPPER.controllers    	= {{"opacity_using_parameter" ,0},{"parameter_compare_with_number",1, 6},{"parameter_compare_with_number",2, 1}}
 AddHudElement(GUN_PIPPER)
