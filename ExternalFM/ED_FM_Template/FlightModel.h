@@ -37,6 +37,8 @@ public:
 	void update(double dt);
 
 	void calculateAeroRotateMoments();
+	void addForce(const Vec3& force, const Vec3& pos);
+	//void addMoment(const Vec3& force, const Vec3& pos);
 	void addedThrustCalc();
 
 	void L_stab();
@@ -89,6 +91,7 @@ private:
 	//double m_thrust = 0.0; //neu 21FEb21 rauskommentiert 28.02.2021
 	double m_thinAirMulti = 0.0;
 	double m_addThrust = 0.0;
+	double m_thrustForce = 0.0;
 	//--------------Misc---------------------------------------------
 	//--------------PitchUp and Stall--------------------------------
 	double m_pitchup = 0.0;
@@ -97,6 +100,8 @@ private:
 	double m_setLiftZero = 0.0;
 	double m_stallIndRoll = 0.0;
 	double m_stallIndDrag = 0.0;
+	bool m_wingStalling = false;
+	double m_CLaCorrMulti = 0.0;
 
 	//---------Pitch Stability-augmentation--------------------------
 	double m_CmqStAg = 0.0;
@@ -180,6 +185,7 @@ private:
 
 	bool prevGearShake = false;
 	bool gearShake = false;
+
 	Timer m_shakeDuration;
 
 
@@ -194,6 +200,7 @@ private:
 	Table Cmq;
 	Table CmadotNEW; //genau so für jede DATA_Table
 	Table CmM;
+	Table CmFlap;
 	//------------Pitch stability augmentation system--------------
 	Table CmqStAg;
 	Table CmaDOTStAg;
@@ -240,6 +247,7 @@ private:
 	Table StAoA;
 	Table StAoAMulti;
 	Table CLzero;
+	Table CLaCorr;
 };
 
 

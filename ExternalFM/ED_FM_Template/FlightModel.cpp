@@ -48,6 +48,7 @@ FlightModel::FlightModel
 	Cmq(DAT_Cmq, CON_Cmq_min, CON_Cmq_max),
 	CmadotNEW(DAT_CmaDOT_Full, CON_CmaDOT_Full_Min, CON_CmaDOT_Full_Max),
 	CmM(DAT_CmM, CON_Cmq_min, CON_Cmq_max),
+	CmFlap(DAT_CmFlap, CON_CmFlap_min, CON_CmFlap_max),
 	CmqStAg(DAT_CmqStAg, CON_CmqStAg_Min, CON_CmqStAg_Max),
 	CmaDOTStAg(DAT_CmaDOTStAg, CON_CmaDOTStAg_Min, CON_CmaDOTStAg_Max),
 	//----------------DRAG---------------------------------------
@@ -68,9 +69,9 @@ FlightModel::FlightModel
 	CL_FlStat(DAT_CL_FlStat, CON_CL_FlStat_Min, CON_CL_FlStat_Max), //Static Flap Lift "base-lift"
 	//--------------ROLL----------------------------------------
 	Clb(DAT_Clb_SL, CON_Clb_SLmin, CON_Clb_SLmax),
-	Clp(DAT_Clp_SL, CON_Clp_SLmin, CON_Clp_SLmax),
+	Clp(DAT_Clp, CON_Clp_min, CON_Clp_max),
 	Clda(DAT_Clda, CON_Cldamin, CON_Cldamax),
-	Clr(DAT_Clr_SL, CON_Clr_SLmin, CON_Clr_SLmax),
+	Clr(DAT_Clr, CON_Clr_min, CON_Clr_max),
 	Cldr(DAT_Cldr_full, CON_Cldr_min, CON_Cldr_max),
 	//---------------YAW---------------------------------------
 	CnbNEW(DAT_Cnb_FULL, CON_Cnb_Full_Min, CON_Cnb_FULL_Max),
@@ -93,7 +94,8 @@ FlightModel::FlightModel
 	PitMult(DAT_PitchMult, CON_PitMulMin, CON_PitMulMax),
 	StAoA(DAT_StallAoA, CON_StAoAMin, CON_StAoAMax),
 	StAoAMulti(DAT_StAoAMulti, CON_StAoAMulti_Min, CON_StAoAMulti_Max),
-	CLzero(DAT_CLzero, CON_CLzeroMin, CON_CLzeroMax)
+	CLzero(DAT_CLzero, CON_CLzeroMin, CON_CLzeroMax),
+	CLaCorr(DAT_CLaCorr, CON_CLaCorr_min, CON_CLaCorr_max)
 	
 	//der letzte Eintrag darf KEIN Komma haben...
 
@@ -162,6 +164,8 @@ void FlightModel::zeroInit()
 	m_setLiftZero = 0.0;
 	m_stallIndRoll = 0.0;
 	m_stallIndDrag = 0.0;
+	m_wingStalling = false;
+	m_CLaCorrMulti = 0.0;
 
 	m_CmqStAg = 0.0;
 	m_CmaDOTStAg = 0.0;
@@ -205,6 +209,9 @@ void FlightModel::zeroInit()
 	
 	gearShake = false;
 	prevGearShake = false;
+
+	//-----------NUR ZUM TETEN--------------------
+	m_thrustForce = 0.0;
 }
 
 void FlightModel::coldInit()
@@ -312,11 +319,12 @@ void FlightModel::L_stab()
 	
 	//-----------Input Clr aud -Clr in der Rotationsformel geändert und "-" vor Clr hier entfernt (sehr gut)------
 	//-----------Multiplikator Clp in der Rotationsformel eingefügt und entfernt wegen Blödheit-----------------------------------
-	//-----------Multiplikator in der Moment Formel für Clp_b von 2.0 auf 1.2 und auf 1.25 auf 1.35 und Clr_b von 1.5 auf 1.1 und auf 1.15------------------------------------------------------
+	//-----------Multiplikator in der Moment Formel für Clp_b von 2.0 auf 1.2 und auf 1.25 auf 1.35 auf 1.45 auf 2.05 auf 2.15 auf 2.35 und Clr_b von 1.5 auf 1.1 und auf 1.15 auf 1.25 auf 1.40 auf 1.35 auf 1.40 auf 1.50------------------------------------------------------
 	//----------m_stallIndRoll verringert auf (s.u.)-----------------------------------------------------------------------------------
 	//-----------anstatt m_state.m_beta m_corrBeta zum Ausgleich für WeightOnWheels----------------------------------------------------
-	m_moment.x += m_q * (Clb_b * m_corrBeta + Clda_b * (((m_input.getRoll() * m_ailDeflection) + m_input.getTrimmAilR() - m_input.getTrimmAilL()) * m_ailDamage) + (m_lWingDamageCD + m_rWingDamageCD) + (0.55 * Cldr_b) * (m_input.getYaw() * m_rudDeflection) + m_stallIndRoll)
-		+ 0.25 * m_state.m_airDensity * m_scalarVelocity * CON_A * CON_b * CON_b * (((1.35 - m_stallMult) * Clp_b) * m_state.m_omega.x + ((1.15 - m_stallMult) * Clr_b) * m_state.m_omega.y);
+	//----------1.15 Multi vor Clda eingefügt; zu 1.35 zu 1.55
+	m_moment.x += m_q * (Clb_b * m_corrBeta + (1.55 * Clda_b * (((m_input.getRoll() * m_ailDeflection) + m_input.getTrimmAilR() - m_input.getTrimmAilL()) * m_ailDamage)) + (m_lWingDamageCD + m_rWingDamageCD) + (0.55 * Cldr_b) * (m_input.getYaw() * m_rudDeflection) + m_stallIndRoll)
+		+ 0.25 * m_state.m_airDensity * m_scalarVelocity * CON_A * CON_b * CON_b * (((2.35 - m_stallMult) * Clp_b) * m_state.m_omega.x + ((1.50 - m_stallMult) * Clr_b) * m_state.m_omega.y);
 }
 
 void FlightModel::M_stab()
@@ -342,9 +350,11 @@ void FlightModel::M_stab()
 	//m_moment.z += m_k * CON_mac * (1.35 * (CmalphaNEW(m_state.m_mach) * m_state.m_aoa) + (-CmdeNEW(m_state.m_mach)) * (((m_input.getPitch() * m_elevDeflection) + m_input.getTrimmUp() - m_input.getTrimmDown() + m_airframe.getAutoPilotAltH()) * m_hStabDamage) + m_pitchup)
 		//+ 0.25 * m_state.m_airDensity * m_scalarVelocity * CON_A * CON_mac * CON_mac * (((1.75 - m_stallMult) * Cmq(m_state.m_mach) + m_CmqStAg) * m_state.m_omega.z + (((1.95 - m_stallMult) * CmadotNEW(m_state.m_mach)) + m_CmaDOTStAg) * m_aoaDot);
 	
+	//------------CmFlaps eingefügt auf 0.75 und 0.75 zu 0.82 zu 0.95 als Multiplikator vor Cmde eingefügt
+	//----------- Multiplikator vor CmAlpha entfernt, da CmAlpha grds. ein negatives Pitchmoment gibt------------
 	//------------------------Neue Formel über corrAoA an m_state.m_aoa angebunden und m_corrBeta statt m_state.m_beta-----------------------------------------------------------
-	m_moment.z += m_k * CON_mac * (1.35 * (CmalphaNEW(m_state.m_mach) * m_corrAoA) + (-CmdeNEW(m_state.m_mach)) * (((m_input.getPitch() * m_elevDeflection) + m_input.getTrimmUp() - m_input.getTrimmDown() + m_airframe.getAutoPilotAltH()) * m_hStabDamage) + m_pitchup)
-		+ 0.25 * m_state.m_airDensity * m_scalarVelocity * CON_A * CON_mac * CON_mac * (((1.75 - m_stallMult) * Cmq(m_state.m_mach) + m_CmqStAg) * m_state.m_omega.z + (((1.95 - m_stallMult) * CmadotNEW(m_state.m_mach)) + m_CmaDOTStAg) * m_aoaDot);
+	m_moment.z += m_k * CON_mac * ((CmalphaNEW(m_state.m_mach) * m_corrAoA) + ((0.95 * -CmdeNEW(m_state.m_mach)) * (((m_input.getPitch() * m_elevDeflection) + m_input.getTrimmUp() - m_input.getTrimmDown() + m_airframe.getAutoPilotAltH()) * m_hStabDamage)) + m_pitchup + (0.95 * CmFlap(m_state.m_mach) * m_airframe.getFlapsPosition()))
+		+ 0.25 * m_state.m_airDensity * m_scalarVelocity * CON_A * CON_mac * CON_mac * ((((1.75 - m_stallMult) * Cmq(m_state.m_mach) + m_CmqStAg) * m_state.m_omega.z) + (((1.95 - m_stallMult) * CmadotNEW(m_state.m_mach)) + m_CmaDOTStAg) * m_aoaDot);
 
 }
 
@@ -387,7 +397,7 @@ void FlightModel::lift()
 	
 	//------------------neue Lift-Formel mit dynamischem Flap-Lift---------------------------------------------------
 	//---------m_state.m_aoa ersetzt durch m_corrAoA-----------------------------------------------------------------
-	m_force.y += m_k * ((((CLa(m_state.m_mach) * m_corrAoA) + ((0.65 * CLds(m_state.m_mach)) * m_elevDeflection) + ((CLFlaps + CLblc) * m_flapDamage)) * ((m_lWingDamageCL + m_rWingDamageCL) / 2.0)) * m_zeroLift);
+	m_force.y += m_k * (((((CLa(m_state.m_mach) * m_corrAoA) *m_CLaCorrMulti) + ((0.65 * CLds(m_state.m_mach)) * m_elevDeflection) + ((CLFlaps + CLblc) * m_flapDamage)) * ((m_lWingDamageCL + m_rWingDamageCL) / 2.0)) * m_zeroLift);
 }
 
 void FlightModel::drag()
@@ -418,8 +428,16 @@ void FlightModel::thrustForce()
 	//m_force.x positive
 	//m_force = Vec3();
 	//m_engine.update(123); //neu eingefügt// und wieder zum testen auskommentiert 
-	m_force.x += abs((m_engine.updateThrust() + m_addThrust) * m_airframe.getEngineDamageMult() * m_thinAirMulti); //ABS eingefügt für nur positiv Schub!! NEU m_thinAirMulti angefügt für Thrustreduktion ab 94.000 ft.
-	//printf("vector %f \n", m_engine.updateThrust()); //neu eingebaut für Ausgabe
+	//--Alte Formel Direkt zu m_force----: m_force.x += abs((m_engine.updateThrust() + m_addThrust) * m_airframe.getEngineDamageMult() * m_thinAirMulti); //ABS eingefügt für nur positiv Schub!! NEU m_thinAirMulti angefügt für Thrustreduktion ab 94.000 ft.
+	//Neue Formel, zu m_force_body
+
+	//m_force_boddy.x += abs((m_engine.updateThrust() + m_addThrust) * m_airframe.getEngineDamageMult() * m_thinAirMulti); so geht es, wenn ich thrustForce später aufrufe
+
+	m_thrustForce = abs((m_engine.updateThrust() + m_addThrust) * m_airframe.getEngineDamageMult() * m_thinAirMulti);
+	
+	
+	//m_force.x += abs((m_engine.updateThrust() + m_addThrust) * m_airframe.getEngineDamageMult() * m_thinAirMulti);
+
 }
 
 void FlightModel::calcAeroDeflection()
@@ -485,7 +503,11 @@ void FlightModel::pitchStabAugSystem()
 
 void FlightModel::calcZeroLift()
 {
+	double CLaCLzeroQuotient = 0.0;
 	m_setLiftZero = CLzero(m_state.m_mach);
+
+	CLaCLzeroQuotient = (m_state.m_aoa / CLzero(m_state.m_mach));
+	m_CLaCorrMulti = CLaCorr(CLaCLzeroQuotient);
 
 	//-----------WeightOnWheels-Sensor eingefügt, da bei LiftOff getWeightOnWheels() == 0.0---------------
 
@@ -494,10 +516,20 @@ void FlightModel::calcZeroLift()
 		if (m_state.m_aoa >= m_setLiftZero)
 		{
 			m_zeroLift = 0.01;
+			m_wingStalling = true;
+		}
+		else if (m_wingStalling == true)
+		{
+			m_zeroLift = 0.01;
 		}
 		else
 		{
 			m_zeroLift = 1.0;
+		}
+
+		if ((m_wingStalling == true) && (m_state.m_aoa <= 0.20)) //wenn AoA wieder kleiner als 11° ist
+		{
+			m_wingStalling = false;
 		}
 
 		if ((m_state.m_aoa >= m_setLiftZero) && (m_state.m_angle.x >= 0.0) && ((m_state.m_aoa > 0.42) && (m_state.m_aoa < 1.745))) //
@@ -528,6 +560,7 @@ void FlightModel::calcZeroLift()
 		m_zeroLift = 1.0;
 		m_stallIndDrag = 0.0;
 		m_stallIndRoll = 0.0;
+		m_wingStalling = false;
 	}
 }
 
@@ -568,10 +601,13 @@ void FlightModel::brokenFlapDrag()
 
 void FlightModel::addedThrustCalc()
 {
-	//-------------------Alte Version ohne Throttle---------------------------------------
-	//m_addThrust = AdThrLAlt(m_state.m_mach) * AdThrLAltMulti(m_airframe.getAltInFeet());
-
 	//hier jetzt die Throttle mit eingefügt und als multiplikator für den added-Thrust eingefügt
+	
+	//-----------hier die alte Variante, die auch bei MilPower Schub addiert--------------------------------
+	/*
+	m_addThrust = corrThrottle * (AdThrLAlt(m_state.m_mach) * AdThrLAltMulti(m_airframe.getAltInFeet()));
+	*/
+	//----------neue Variante, die nur bei AB-Power Schub addiert, je nach Schub-Level-----------------------
 	
 	double corrThrottle = 0.0;
 
@@ -585,9 +621,52 @@ void FlightModel::addedThrustCalc()
 		corrThrottle = (m_input.getThrottle() + 1.0) / 2.0;
 	}
 
-	m_addThrust = corrThrottle * (AdThrLAlt(m_state.m_mach) * AdThrLAltMulti(m_airframe.getAltInFeet()));
+	if (m_engine.updateSpool() >= 0.85)
+	{
+		m_addThrust = corrThrottle * (AdThrLAlt(m_state.m_mach) * AdThrLAltMulti(m_airframe.getAltInFeet()));
+	}
+	else
+	{
+		m_addThrust = 0.0;
+	}
+}
+
+//-----------------Testweise umd Lift und Drag zu dem Pitch-Moment hinzu zu fügen-----------
+//------------------wenn es zu komisch wird, dann fliegt es wieder raus--------------------
+/*void FlightModel::addMoment(const Vec3& force, const Vec3& pos)
+{
+	//Add the force to the overall force
+	//m_force_boddy += force;//auskommentiert, da ich zu m_boddy_force nichts hinzufügen möchte, sondern nur momente aus Kräften
+
+	//Calculate the relative position to the centre of mass
+	Vec3 relativePos = pos - m_state.m_com;
+
+	//Calculate the "moment" (actually torque)
+	Vec3 moment = cross(relativePos, force);
+
+	//Add it on to the moments
+	m_moment += moment;
+
+}*/
+//-------------------ENDE der testweisen Einfügung-----------------------------------------
+
+void FlightModel::addForce(const Vec3& force, const Vec3& pos)
+{
+	//Add the force to the overall force
+	m_force_boddy += force;//hier will ich auch FORCE haben!!!
+
+	//Calculate the relative position to the centre of mass
+	Vec3 relativePos = pos - m_state.m_com;
+
+	//Calculate the "moment" (actually torque)
+	Vec3 moment = cross(relativePos, force);
+
+	//Add it on to the moments
+	m_moment += moment;
 
 }
+
+
 
 void FlightModel::update(double dt)
 {
@@ -634,7 +713,7 @@ void FlightModel::update(double dt)
 	lift();
 	drag();
 	sideForce();
-	thrustForce();
+	thrustForce(); 
 	calculateShake(dt);
 	calcAeroDeflection();
 	calcLiftFlaps();
@@ -797,12 +876,28 @@ void FlightModel::update(double dt)
 	printf("CompressorIntegrity %f \n", m_airframe.getCompressorDamage());*/
 	//printf("Roll %f \n", m_input.m_roll);
 
-	//das muss hier hinten hin, damit m_force durch das update der Lift und Drag-Funktionen gefüllt ist. Sonnst ist m_force = 0.0
-	//-------------------Alte formulierung mit direkter Anbindung-----------------
-	//m_force_boddy = windAxisToBodyAxis(m_force, m_state.m_aoa, m_state.m_beta);
-
+	//--!!!!!---das muss hier hinten hin, damit m_force durch das update der Lift und Drag-Funktionen gefüllt ist. Sonnst ist m_force = 0.0 !!!!-------------
+	
 	//-------------neue Formulierung mit Anbindung über m_corrAoA und m_corrBeta anstatt m_state.m_aoa und m_state.m_beta----------------
 	m_force_boddy = windAxisToBodyAxis(m_force, m_corrAoA, m_corrBeta);
+
+	//------------Testweise damit die Lift und Drag-Forces zu den Pitch-Momenten hinzugefügt werden---------------
+	//--------------Wieder auskommentiert, da es hier leider Stall/Spin kaputt macht---------------------------
+	
+	//addMoment(m_force_boddy, Vec3(-0.25 * CON_mac, 0.0, 0.0));//von -0.25 
+	
+	//---------------------------------------------------------------------------------------------------------
+	//-----------Die folgende lassen wir drin, da damit Thrustforce erst nach der Rotation genau straight eingefügt wird-----------------
+	addForce(Vec3(m_thrustForce, 0.0, 0.0), m_state.m_com); 
+	
+	//die Formel brauch 2x Vec3s addForce( z.B. m_force, m_state.m_com) weil beides Vec3s sind
+	//wenn ich nur eine Variable (also eine lineare Force die nicht Vec3 ist nutzen will muss ich sie eben als (x, y, z) eintragen
+	//z.B. addForce(Vec3(m_force.x, 0.0, 0.0),Vec3(-0.25, 0.0, 0.0));
+	//dann wird als X-Wert die Variable m_force.x gesetzt und diese wirkt als moment 0.25m vor dem Schwerpunkt und verursacht dann ein Drehbewegung
+	//addMoment ist die Formel die dann nicht die Force addiert sondern die Force in ein Moment umwandelt ohne die Forces auch noch zu addieren...
+	//----------------------------------------------------------------------------------------------------------------------------------------------
+
+	//thrustForce();//so geht es schonmal, jetzt versuch 2
 
 	//printf("boddy_force_X %f \n", m_force_boddy.x);
 	//printf("boddy_force_Y %f \n", m_force_boddy.y);
@@ -820,7 +915,7 @@ void FlightModel::calculateShake(double& dt)
 	double x{ 0.0 };
 
 	// 20 - 28
-	double aoa = toDegrees(std::abs(m_state.m_aoa));
+	double aoa = toDegrees(std::abs(m_corrAoA));
 	if (m_state.m_mach > 0.15)
 		shakeAmplitude = clamp((aoa - 10.0) / 15.0, 0.0, 1.0);
 	
@@ -865,6 +960,19 @@ void FlightModel::calculateShake(double& dt)
 	// SPEED BRAKES CONTRIBUTION
 	double speedBrakesContinousShake = m_airframe.getSpeedBrakePosition() * 0.12;
 
+	// AB CONTRIBUTION
+	double ReHeatContinousShake = 0.0;
+
+	if (m_engine.updateBurner() >= 0.85)
+	{
+		ReHeatContinousShake = m_engine.getRPMNorm() * 0.10;
+	}
+	else
+	{
+		ReHeatContinousShake = 0.0;
+	}
+
+
 
 	m_shakeDuration.updateLoop(dt);
 
@@ -879,11 +987,12 @@ void FlightModel::calculateShake(double& dt)
 
 	double shakeGroupA = airspeedScale * std::min(flapsContinousShake + gearContinousShake, 0.075);
 	double shakeGroupB = airspeedScale * speedBrakesContinousShake;
+	double shakeGroupC = ReHeatContinousShake;
 	double shakeGroupInst = std::min(shakeInstGear, 1.5);
 
 	//printf("shake: %lf\n", shakeAmplitude);
 
-	m_cockpitShake = shakeAmplitude + shakeGroupA + shakeGroupB + shakeGroupInst;
+	m_cockpitShake = shakeAmplitude + shakeGroupA + shakeGroupB + shakeGroupC + shakeGroupInst;
 	m_cockpitShake *= 1.3; //CockpitShakeMultiplier von 1.5 auf 1.3
 
 }

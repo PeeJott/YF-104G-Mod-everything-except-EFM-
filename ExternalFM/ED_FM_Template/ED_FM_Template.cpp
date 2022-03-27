@@ -938,7 +938,7 @@ void ed_fm_set_draw_args (EdDrawArgument * drawargs,size_t size)
 	drawargs[0].f = s_airframe->getGearNPosition();//Nosewheel Position
 	drawargs[3].f = s_airframe->getGearRPosition();//Right Gear Position
 	drawargs[5].f = s_airframe->getGearLPosition();//Left Gear Position
-	drawargs[25].f = s_airframe->getHookPosition();//Hook Position
+	//drawargs[25].f = s_airframe->getHookPosition();//Hook Position
 	drawargs[28].f = s_engine->updateBurner();//Burner Stage 1 and 0
 	drawargs[89].f = s_airframe->getNozzlePosition();//Engine Nozzle Stage 1 - 0 - 1
 	drawargs[2].f = s_airframe->getNoseWheelAngle();//Nosewheel Angle +/- 60°

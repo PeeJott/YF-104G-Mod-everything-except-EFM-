@@ -251,7 +251,7 @@ class Input
 
 		inline const void throttle(double value)
 		{
-			m_throttle = -value; //ein Versuch für eine NICHT invertierte Axe in der Hoffnung, dass auch das "Rückwärts" Problem weg ist
+			m_throttle = -value; //DAMIT muss man die Schubachse nicht mehr invertieren :-)
 			//return m_throttle;
 		}
 
